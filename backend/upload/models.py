@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 class Escritorio(models.Model):
     nome = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
@@ -41,3 +39,11 @@ class AdvogadoCausa(models.Model):
 
     class Meta:
         unique_together = ['advogado', 'causa']
+
+class Documento(models.Model):
+    nome = models.CharField(max_length=255)
+    arquivo = models.FileField(upload_to='documentos/')
+    data_upload = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nome
