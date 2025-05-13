@@ -1,0 +1,29 @@
+# Node modules
+**/node_modules/
+
+# Python environment
+**/venv/
+
+# Arquivos de configuração e logs do Django
+**/*.pyc
+**/__pycache__/
+**/db.sqlite3
+**/logs/
+**/*.log
+
+# Arquivos de configuração do ambiente
+**/.env
+
+# Arquivos de build do frontend (React, Next.js, etc.)
+**/build/
+**/dist/
+**/out/
+**/.next/
+
+# IDEs
+.vscode/
+.idea/
+
+# Outros arquivos
+.DS_Store
+Thumbs.db
