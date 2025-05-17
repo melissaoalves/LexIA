@@ -13,3 +13,4 @@ pytest-django==4.5.2
 requests==2.28.2
 google-generativeai
 pdf2image
+openai

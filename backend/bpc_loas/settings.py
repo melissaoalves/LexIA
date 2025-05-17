@@ -16,6 +16,7 @@ import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -128,3 +129,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #gemini
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+#openAI
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
