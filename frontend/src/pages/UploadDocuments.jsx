@@ -27,8 +27,38 @@ import {
   ClienteNome,
   ClienteDetalhes,
   StatusText,
+  WrapperCentralizado,
+  SearchInputWrapper,
+  HeaderContentWrapper,
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
+
+const LoadingBar = () => (
+  <div style={{
+    marginTop: "1rem",
+    height: "10px",
+    width: "100%",
+    backgroundColor: "#eee",
+    borderRadius: "8px",
+    overflow: "hidden",
+    position: "relative"
+  }}>
+    <div style={{
+      position: "absolute",
+      height: "100%",
+      width: "30%",
+      backgroundColor: "#2d2d2d",
+      animation: "loadingAnim 1.2s infinite"
+    }} />
+    <style>{`
+      @keyframes loadingAnim {
+        0% { left: -30%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+      }
+    `}</style>
+  </div>
+);
 
 function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
@@ -54,6 +84,30 @@ export default function Peticoes() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [modalStep, setModalStep] = useState("upload"); // upload, loading, edit, select
+  const [extractedText, setExtractedText] = useState("");
+  const [selectedAdvogados, setSelectedAdvogados] = useState([]);
+
+  const advogadosDisponiveis = [
+    { id: 1, nome: "Dr. Ana Paula" },
+    { id: 2, nome: "Dr. Carlos Souza" },
+    { id: 3, nome: "Dr. Letícia Almeida" },
+  ];
+
+  const simularExtracaoTexto = () => {
+    setModalStep("loading");
+    setTimeout(() => {
+      setExtractedText("Exemplo de texto extraído do documento para edição...");
+      setModalStep("edit");
+    }, 2000);
+  };
+
+  const toggleAdvogado = (id) => {
+    setSelectedAdvogados((prev) =>
+      prev.includes(id) ? prev.filter((aid) => aid !== id) : [...prev, id]
+    );
+  };
+
   useEffect(() => {
     const fetchedPeticoes = [
       {
@@ -77,49 +131,6 @@ export default function Peticoes() {
         dataCriacao: "2025-05-14",
         arquivo_peticao_url: "/files/peticao_3.docx",
       },
-      {
-        id: 4,
-        nomeCliente: "Joãgo Silva",
-        status: "Concluído",
-        dataCriacao: "2025-05-10",
-        arquivo_peticao_url: "/files/peticao_1.docx",
-      },
-      {
-        id: 5,
-        nomeCliente: "Mariaa Santos",
-        status: "Em andamento",
-        dataCriacao: "2025-05-12",
-        arquivo_peticao_url: "/files/peticao_2.docx",
-      },
-      {
-        id: 6,
-        nomeCliente: "Lucass Pereira",
-        status: "Concluído",
-        dataCriacao: "2025-05-14",
-        arquivo_peticao_url: "/files/peticao_3.docx",
-      },
-      {
-        id: 7,
-        nomeCliente: "Joãfgo Siglva",
-        status: "Concluído",
-        dataCriacao: "2025-05-10",
-        arquivo_peticao_url: "/files/peticao_1.docx",
-      },
-      {
-        id: 8,
-        nomeCliente: "Marsia Ssantos",
-        status: "Em andamento",
-        dataCriacao: "2025-05-12",
-        arquivo_peticao_url: "/files/peticao_2.docx",
-      },
-      {
-        id: 9,
-        nomeCliente: "Lucas Persseira",
-        status: "Concluído",
-        dataCriacao: "2025-05-14",
-        arquivo_peticao_url: "/files/peticao_3.docx",
-      },
-
     ];
     setPeticoes(fetchedPeticoes);
     setFilteredPeticoes(fetchedPeticoes);
@@ -146,10 +157,12 @@ export default function Peticoes() {
     e.preventDefault();
     setDragOver(true);
   };
+
   const onDragLeave = (e) => {
     e.preventDefault();
     setDragOver(false);
   };
+
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
@@ -161,96 +174,175 @@ export default function Peticoes() {
   };
 
   const handleSubmit = () => {
-    alert(`${selectedFiles.length} arquivos selecionados para upload.`);
-    setModalOpen(false);
-    setSelectedFiles([]);
+    if (selectedFiles.length === 0) return;
+    simularExtracaoTexto();
   };
 
   return (
     <Container>
       <Header>
-        <Title>Minhas Petições</Title>
+        <HeaderContentWrapper>
+          <Title>Minhas Petições</Title>
+        </HeaderContentWrapper>
       </Header>
+      <WrapperCentralizado>
+        <SearchWrapper>
+          <SearchInputWrapper>
+            <SearchIcon />
+            <SearchInput
+              type="text"
+              placeholder="Buscar petições..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchInputWrapper>
 
-      <SearchWrapper>
-        <SearchIcon />
-        <SearchInput
-          type="text"
-          placeholder="Buscar petições..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      <CreateButton onClick={() => setModalOpen(true)}>
-          Gerar / Criar Petição
-        </CreateButton>
+          <CreateButton
+            onClick={() => {
+              setModalOpen(true);
+              setModalStep("upload");
+              setSelectedFiles([]);
+              setExtractedText("");
+              setSelectedAdvogados([]);
+            }}
+          >
+            Gerar / Criar Petição
+          </CreateButton>
+        </SearchWrapper>
 
-      </SearchWrapper>
-
-      <PeticoesContainer>
-        {filteredPeticoes.map((peticao) => (
-          <PeticaoCard key={peticao.id}>
-            <PeticaoInfo>
+        <PeticoesContainer>
+          {filteredPeticoes.map((peticao) => (
+            <PeticaoCard key={peticao.id}>
+              <PeticaoInfo>
                 <ClienteNome>{peticao.nomeCliente}</ClienteNome>
                 <ClienteDetalhes>
-                    Status: <StatusText concluido={peticao.status === "Concluído"}>{peticao.status}</StatusText> <br />
-                    Data de criação: {peticao.dataCriacao}
+                  Status:{" "}
+                  <StatusText concluido={peticao.status === "Concluído"}>
+                    {peticao.status}
+                  </StatusText>
+                  <br />
+                  Data de criação: {peticao.dataCriacao}
                 </ClienteDetalhes>
-            </PeticaoInfo>
-            <DownloadButton href={peticao.arquivo_peticao_url} download>
-              <FaDownload />
-            </DownloadButton>
-          </PeticaoCard>
-        ))}
-      </PeticoesContainer>
+              </PeticaoInfo>
+              <DownloadButton href={peticao.arquivo_peticao_url} download>
+                <FaDownload />
+              </DownloadButton>
+            </PeticaoCard>
+          ))}
+        </PeticoesContainer>
+      </WrapperCentralizado>
 
       {modalOpen && (
         <ModalBackdrop onClick={() => setModalOpen(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <h2>Enviar documentos</h2>
 
-            <DragDropArea
-              className={dragOver ? "drag-over" : ""}
-              onClick={() => fileInputRef.current.click()}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-            >
-              Clique ou arraste os arquivos aqui para enviar
-            </DragDropArea>
+            {modalStep === "upload" && (
+              <>
+                <DragDropArea
+                  className={dragOver ? "drag-over" : ""}
+                  onClick={() => fileInputRef.current.click()}
+                  onDragOver={onDragOver}
+                  onDragLeave={onDragLeave}
+                  onDrop={onDrop}
+                >
+                  Clique ou arraste os arquivos aqui para enviar
+                </DragDropArea>
 
-            <HiddenFileInput
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.docx,.png,.jpg,.jpeg"
-              onChange={handleFilesChange}
-            />
+                <HiddenFileInput
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.png,.jpg,.jpeg"
+                  onChange={handleFilesChange}
+                />
 
-            <FileList>
-              {selectedFiles.map((file, index) => (
-                <FileListItem key={index}>
-                  <FileInfo>
-                    <FileThumbnail src={getFileThumbnail(file)} alt={file.name} />
-                    <FileDetailsWrapper>
-                      <FileName>{file.name}</FileName>
-                      <FileDetails>
-                        {file.name.split(".").pop().toUpperCase()} • {formatFileSize(file.size)}
-                      </FileDetails>
-                    </FileDetailsWrapper>
-                  </FileInfo>
-                  <RemoveButton onClick={() => removerArquivo(index)} title="Remover arquivo">
-                    <FaTrash size={18} />
-                  </RemoveButton>
-                </FileListItem>
-              ))}
-            </FileList>
+                <FileList>
+                  {selectedFiles.map((file, index) => (
+                    <FileListItem key={index}>
+                      <FileInfo>
+                        <FileThumbnail
+                          src={getFileThumbnail(file)}
+                          alt={file.name}
+                        />
+                        <FileDetailsWrapper>
+                          <FileName>{file.name}</FileName>
+                          <FileDetails>
+                            {file.name.split(".").pop().toUpperCase()} •{" "}
+                            {formatFileSize(file.size)}
+                          </FileDetails>
+                        </FileDetailsWrapper>
+                      </FileInfo>
+                      <RemoveButton
+                        onClick={() => removerArquivo(index)}
+                        title="Remover arquivo"
+                      >
+                        <FaTrash size={18} />
+                      </RemoveButton>
+                    </FileListItem>
+                  ))}
+                </FileList>
 
-            <SubmitButton
-              disabled={selectedFiles.length === 0}
-              onClick={handleSubmit}
-            >
-              Enviar Documentos
-            </SubmitButton>
+                <SubmitButton
+                  disabled={selectedFiles.length === 0}
+                  onClick={handleSubmit}
+                >
+                  Enviar Documentos
+                </SubmitButton>
+              </>
+            )}
+
+            {modalStep === "loading" && (
+              <div>
+                <p>Lendo documento...</p>
+                <LoadingBar />
+              </div>
+            )}
+
+            {modalStep === "edit" && (
+              <div>
+                <label>Texto extraído (editável):</label>
+                <textarea
+                  rows={8}
+                  style={{
+                    width: "100%",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    marginTop: "0.5rem",
+                  }}
+                  value={extractedText}
+                  onChange={(e) => setExtractedText(e.target.value)}
+                />
+                <SubmitButton onClick={() => setModalStep("select")}>
+                  Confirmar texto
+                </SubmitButton>
+              </div>
+            )}
+
+            {modalStep === "select" && (
+              <div>
+                <h3>Selecionar advogados</h3>
+                {advogadosDisponiveis.map((adv) => (
+                  <label
+                    key={adv.id}
+                    style={{ display: "block", marginBottom: "0.5rem" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAdvogados.includes(adv.id)}
+                      onChange={() => toggleAdvogado(adv.id)}
+                    />{" "}
+                    {adv.nome}
+                  </label>
+                ))}
+
+                {selectedAdvogados.length > 0 && (
+                  <SubmitButton onClick={() => alert("Petição gerada!")}>
+                    Gerar Petição
+                  </SubmitButton>
+                )}
+              </div>
+            )}
           </ModalContent>
         </ModalBackdrop>
       )}
