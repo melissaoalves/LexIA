@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, generics, permissions
 from upload.models import Advogado, Escritorio, Causa
 from .serializers import AdvogadoSerializer, EscritorioSerializer, CausaSerializer
 
@@ -18,3 +18,11 @@ class EscritorioViewSet(viewsets.ModelViewSet):
 class CausaViewSet(viewsets.ModelViewSet):
     queryset = Causa.objects.all()
     serializer_class = CausaSerializer
+
+class EscritorioUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Escritorio.objects.all()
+    serializer_class = EscritorioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user.escritorio

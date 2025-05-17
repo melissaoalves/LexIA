@@ -96,19 +96,14 @@ class DocumentoUploadView(APIView):
                 'texto_extraido': texto_extraido,
             })
 
-        # Extrair dados estruturados em JSON string
         dados_estruturados_json = extrair_dados_peticao(full_text_total)
 
-        # Caminho do template .docx
         caminho_template = os.path.join('templates', 'peticao_bpc_loas.docx')
 
-        # Caminho onde salvar o documento preenchido
         caminho_saida = os.path.join(TEMP_DIR, f'peticao_{peticao.id}.docx')
 
-        # Gerar petição preenchida
         gerar_peticao(dados_estruturados_json, caminho_template, caminho_saida)
 
-        # Salvar arquivo gerado no modelo peticao
         with open(caminho_saida, 'rb') as f:
             peticao.arquivo_peticao.save(f'peticao_{peticao.id}.docx', f)
             peticao.save()

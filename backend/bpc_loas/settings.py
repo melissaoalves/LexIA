@@ -47,7 +47,15 @@ INSTALLED_APPS = [
     'ocr',
     'pdf_extraction',
     'rest_framework',
+    'authuser',
+    'rest_framework_simplejwt',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -131,4 +139,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 #openAI
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+AUTH_USER_MODEL = 'authuser.User'
 

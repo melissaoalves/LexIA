@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Documento, Causa
+from .models import Documento, Causa, Escritorio
 
 class DocumentoSerializer(serializers.ModelSerializer):
     class Meta:
