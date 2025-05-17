@@ -17,11 +17,11 @@ const colors = {
 export const Container = styled.div`
   background: ${colors.background};
   min-height: 100vh;
-  padding: 6rem 3rem 2rem 3rem; // Top maior para compensar header fixo
+  padding: 6rem 1rem 2rem 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: ${colors.textPrimary};
+  box-sizing: border-box;
 `;
-
 
 export const Header = styled.div`
   position: fixed;
@@ -30,65 +30,65 @@ export const Header = styled.div`
   width: 100vw;
   background-color: ${colors.border};
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 3rem;
+  justify-content: center;
+  padding: 1.5rem 2rem;
   z-index: 1000;
+  box-sizing: border-box;
 `;
 
-
+export const HeaderContentWrapper = styled.div`
+  width: 100%;
+  max-width: 1270px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
 
 export const Title = styled.h1`
   font-weight: 700;
   font-size: 1.75rem;
+
+  @media (max-width: 600px) {
+    font-size: 1.4rem;
+  }
 `;
 
 export const CreateButton = styled.button`
-  padding: 0.6rem 1.6rem;
+  padding: 0.6rem 1.9rem;
   background-color: ${colors.accent};
   color: ${colors.tagText};
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 700;
+  font-weight: 900;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-left: 3rem;
-
+  height: 100%;
 
   &:hover {
     background-color: ${colors.accentHover};
   }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: auto;
+  }
 `;
 
 export const PeticoesContainer = styled.div`
-  background: #ccc;
+  background: ${colors.lightGray};
   border-radius: 12px;
-  border: 1px solid #cccccc; /* cor atualizada */
-  height: 700px;
-  width: 1300px;
+  border: 1px solid ${colors.border};
+  width: 100%;
+  height: calc(100vh - 260px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 
-  /* Scrollbar estilizada */
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 0 12px 12px 0;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #a6a6a6;
-    border-radius: 10px;
+  @media (max-width: 600px) {
+    height: auto;
   }
 `;
-
-
-
 
 export const PeticaoCard = styled.div`
   display: flex;
@@ -98,9 +98,16 @@ export const PeticaoCard = styled.div`
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background-color: ${colors.lightGray};
   width: 100%;
+
   &:hover {
-  background-color:rgba(224, 224, 224, 0.57);
-}
+    background-color: rgba(224, 224, 224, 0.57);
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 `;
 
 export const PeticaoInfo = styled.div`
@@ -114,14 +121,14 @@ export const ClienteNome = styled.span`
   font-size: 0.95rem;
 `;
 
-export const ClienteDetalhe = styled.span`
+export const ClienteDetalhes = styled.span`
+  font-size: 0.9rem;
   color: ${colors.textSecondary};
-  font-size: 0.85rem;
 `;
 
 export const DownloadButton = styled.a`
-  margin-left: auto;         /* empurra para a direita */
-  padding-left: 2rem;        /* distância do conteúdo */
+  margin-left: auto;
+  padding-left: 2rem;
   background: none;
   padding: 0.5rem;
   border-radius: 6px;
@@ -140,8 +147,12 @@ export const DownloadButton = styled.a`
     width: 20px;
     height: 20px;
   }
-`;
 
+  @media (max-width: 600px) {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+`;
 
 export const ModalBackdrop = styled.div`
   position: fixed;
@@ -263,14 +274,30 @@ export const RemoveButton = styled.button`
 `;
 
 export const SearchWrapper = styled.div`
-  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1rem;
   width: 100%;
   margin-bottom: 1.5rem;
 `;
 
+export const SearchInputWrapper = styled.div`
+  position: relative;
+  flex-grow: 1;
+  min-width: 250px;
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
+`;
+
 export const SearchInput = styled.input`
-  width: 60%;
-  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  flex-grow: 1;
+  min-width: 0;
+  width: 90%;
+  padding: 0.6rem 1rem 0.6rem 2.7rem;
   font-size: 1rem;
   border: 1px solid ${colors.border};
   border-radius: 8px;
@@ -281,39 +308,74 @@ export const SearchInput = styled.input`
   &::placeholder {
     color: ${colors.textSecondary};
   }
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
 `;
 
 export const SearchIcon = styled(FaSearch)`
   position: absolute;
   top: 50%;
-  left: 0.9rem;
+  left: 1rem;
   transform: translateY(-50%);
   color: ${colors.textSecondary};
-`;
-
-export const ClienteDetalhes = styled.span`
-  font-size: 0.9rem;
-  color: ${colors.textSecondary};
+  pointer-events: none;
 `;
 
 export const StatusText = styled.span`
   color: ${(props) => (props.concluido ? "#048530" : "#c49400")};
   background-color: ${(props) => (props.concluido ? "#e3faeb" : "#fff4d4")};
   padding: 0.25rem 0.6rem;
-  border-radius: 999px; /* deixa o canto bem arredondado como uma tag */
+  border-radius: 999px;
   font-weight: 600;
   font-size: 0.85rem;
 `;
 
-export const TopBar = styled.div`
-  width: 100%;
-  background-color: #ffdfa1; // amarelo claro
-  padding: 1.2rem 3rem;
+export const WrapperCentralizado = styled.div`
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  border-bottom: 1px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
 `;
 
+export const TextAreaEditavel = styled.textarea`
+  width: 100%;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid ${colors.border};
+  font-size: 1rem;
+  resize: vertical;
+  background-color: ${colors.lightGray};
+  color: ${colors.textPrimary};
+`;
 
+export const LoadingBar = styled.div`
+  margin-top: 1rem;
+  height: 10px;
+  width: 100%;
+  background-color: #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 30%;
+    background-color: ${colors.accent};
+    animation: loadingAnim 1.2s infinite;
+  }
+
+  @keyframes loadingAnim {
+    0% { left: -30%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+  }
+`;
