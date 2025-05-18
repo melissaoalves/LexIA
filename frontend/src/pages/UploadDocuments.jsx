@@ -37,29 +37,32 @@ import {
   AvatarMenuWrapper,
   DropdownMenu,
   Subtitulo,
-  WrapperLeft
+  WrapperLeft,
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import OfficeDataModal from "../components/OfficeDataModal";
 
-
 const LoadingBar = () => (
-  <div style={{
-    marginTop: "1rem",
-    height: "10px",
-    width: "100%",
-    backgroundColor: "#eee",
-    borderRadius: "8px",
-    overflow: "hidden",
-    position: "relative"
-  }}>
-    <div style={{
-      position: "absolute",
-      height: "100%",
-      width: "30%",
-      backgroundColor: "#2d2d2d",
-      animation: "loadingAnim 1.2s infinite"
-    }} />
+  <div
+    style={{
+      marginTop: "1rem",
+      height: "10px",
+      width: "100%",
+      backgroundColor: "#eee",
+      borderRadius: "8px",
+      overflow: "hidden",
+      position: "relative",
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        height: "100%",
+        width: "30%",
+        backgroundColor: "#2d2d2d",
+        animation: "loadingAnim 1.2s infinite",
+      }}
+    />
     <style>{`
       @keyframes loadingAnim {
         0% { left: -30%; }
@@ -76,13 +79,17 @@ function formatFileSize(bytes) {
 
 function getFileThumbnail(file) {
   const ext = file.name.split(".").pop().toLowerCase();
-  if (ext === "pdf") return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
-  if (ext === "doc" || ext === "docx") return "https://cdn-icons-png.flaticon.com/512/337/337932.png";
-  if (ext === "png" || ext === "jpg" || ext === "jpeg") return URL.createObjectURL(file);
+  if (ext === "pdf")
+    return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
+  if (ext === "doc" || ext === "docx")
+    return "https://cdn-icons-png.flaticon.com/512/337/337932.png";
+  if (ext === "png" || ext === "jpg" || ext === "jpeg")
+    return URL.createObjectURL(file);
   return "https://cdn-icons-png.flaticon.com/512/565/565547.png";
 }
 
 export default function Peticoes() {
+  const [loadingEscritorio, setLoadingEscritorio] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [menuAberto, setMenuAberto] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -195,12 +202,16 @@ export default function Peticoes() {
       // Confirma os dados que estão sendo enviados
       console.log("Payload enviado:", formData);
 
-      const response = await axios.patch("http://localhost:8000/escritorio/me/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.patch(
+        "http://localhost:8000/escritorio/me/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // DEBUG: Verifica a resposta da API
       console.log("Resposta da API:", response.data);
@@ -226,36 +237,42 @@ export default function Peticoes() {
     }
   };
 
-
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const nomeSalvo = localStorage.getItem("nome");
     if (nomeSalvo) setNomeUsuario(nomeSalvo);
 
-    axios.get("http://localhost:8000/escritorio/me/", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((response) => {
-      if (response.data && response.data.nome) {
-        setShowOfficeModal(false);  // escritório já está cadastrado
-      }
-    })
-    .catch((error) => {
-      console.log("Erro ao buscar escritório:", error);
-      setShowOfficeModal(true);  // escritório não existe ou erro
-    });
+    axios
+      .get("http://localhost:8000/escritorio/me/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        if (response.data && response.data.nome) {
+          setShowOfficeModal(false); // escritório já está cadastrado
+        }
+      })
+      .catch((error) => {
+        console.log("Erro ao buscar escritório:", error);
+        setShowOfficeModal(true); // escritório não existe ou erro
+      })
+      .finally(() => {
+        setLoadingEscritorio(false); // finaliza o carregamento
+      });
   }, []);
 
+
   const handleLogout = () => {
-  localStorage.clear();
-  window.location.href = "/login";
+    localStorage.clear();
+    window.location.href = "/login";
   };
 
   return (
     <Container>
-      {showOfficeModal && <OfficeDataModal show={true} onSubmit={handleOfficeSubmit} />}
+      {!loadingEscritorio && showOfficeModal && (
+        <OfficeDataModal show={true} onSubmit={handleOfficeSubmit} />
+      )}
 
       <Header>
         <HeaderContentWrapper>
@@ -264,7 +281,9 @@ export default function Peticoes() {
             <NomeUsuario>{nomeUsuario}</NomeUsuario>
 
             <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
-              <AvatarCirculo>{nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}</AvatarCirculo>
+              <AvatarCirculo>
+                {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
+              </AvatarCirculo>
               {menuAberto && (
                 <DropdownMenu>
                   <li>Meu perfil</li>
@@ -275,13 +294,12 @@ export default function Peticoes() {
           </UsuarioWrapper>
         </HeaderContentWrapper>
       </Header>
-      
+
       <WrapperLeft>
         <Subtitulo>Minhas Petições</Subtitulo>
       </WrapperLeft>
 
       <WrapperCentralizado>
-        
         <SearchWrapper>
           <SearchInputWrapper>
             <SearchIcon />
@@ -339,7 +357,7 @@ export default function Peticoes() {
                 background: "transparent",
                 border: "none",
                 fontSize: "1.5rem",
-                cursor: "pointer"
+                cursor: "pointer",
               }}
               onClick={() => setModalOpen(false)}
               aria-label="Fechar modal"
@@ -373,15 +391,22 @@ export default function Peticoes() {
                   {selectedFiles.map((file, index) => (
                     <FileListItem key={index}>
                       <FileInfo>
-                        <FileThumbnail src={getFileThumbnail(file)} alt={file.name} />
+                        <FileThumbnail
+                          src={getFileThumbnail(file)}
+                          alt={file.name}
+                        />
                         <FileDetailsWrapper>
                           <FileName>{file.name}</FileName>
                           <FileDetails>
-                            {file.name.split(".").pop().toUpperCase()} • {formatFileSize(file.size)}
+                            {file.name.split(".").pop().toUpperCase()} •{" "}
+                            {formatFileSize(file.size)}
                           </FileDetails>
                         </FileDetailsWrapper>
                       </FileInfo>
-                      <RemoveButton onClick={() => removerArquivo(index)} title="Remover arquivo">
+                      <RemoveButton
+                        onClick={() => removerArquivo(index)}
+                        title="Remover arquivo"
+                      >
                         <FaTrash size={18} />
                       </RemoveButton>
                     </FileListItem>
@@ -409,7 +434,12 @@ export default function Peticoes() {
                 <label>Texto extraído (editável):</label>
                 <textarea
                   rows={8}
-                  style={{ width: "100%", padding: "1rem", borderRadius: "8px", marginTop: "0.5rem" }}
+                  style={{
+                    width: "100%",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    marginTop: "0.5rem",
+                  }}
                   value={extractedText}
                   onChange={(e) => setExtractedText(e.target.value)}
                 />
@@ -423,7 +453,10 @@ export default function Peticoes() {
               <div>
                 <h3>Selecionar advogados</h3>
                 {advogadosDisponiveis.map((adv) => (
-                  <label key={adv.id} style={{ display: "block", marginBottom: "0.5rem" }}>
+                  <label
+                    key={adv.id}
+                    style={{ display: "block", marginBottom: "0.5rem" }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedAdvogados.includes(adv.id)}
