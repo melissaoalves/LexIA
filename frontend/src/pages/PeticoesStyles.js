@@ -421,3 +421,57 @@ export const Input = styled.input`
   background: ${colors.lightGray};
   color: ${colors.textPrimary};
 `;
+
+export const UsuarioWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+export const NomeUsuario = styled.span`
+  font-weight: 600;
+  color: ${colors.textPrimary};
+`;
+
+export const AvatarCirculo = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: ${colors.accentHover};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${colors.accent};
+  font-weight: bold;
+  text-transform: uppercase;
+`;
+
+export const AvatarMenuWrapper = styled.div`
+  position: relative;
+  cursor: pointer;
+`;
+
+export const DropdownMenu = styled.ul`
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: ${colors.lightGray};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+
+  li {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    color: ${colors.textPrimary};
+    cursor: pointer;
+
+    &:hover {
+      background-color: ${colors.accentHover};
+    }
+  }
+`;

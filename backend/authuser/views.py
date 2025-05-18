@@ -14,6 +14,11 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['nome'] = user.nome
         return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['nome'] = self.user.nome
+        return data
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()

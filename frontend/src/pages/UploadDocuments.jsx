@@ -30,6 +30,11 @@ import {
   WrapperCentralizado,
   SearchInputWrapper,
   HeaderContentWrapper,
+  AvatarCirculo,
+  NomeUsuario,
+  UsuarioWrapper,
+  AvatarMenuWrapper,
+  DropdownMenu
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import OfficeDataModal from "../components/OfficeDataModal";
@@ -74,6 +79,8 @@ function getFileThumbnail(file) {
 }
 
 export default function Peticoes() {
+  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [menuAberto, setMenuAberto] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [peticoes, setPeticoes] = useState([]);
@@ -175,6 +182,17 @@ export default function Peticoes() {
     setShowOfficeModal(false);
   };
 
+  useEffect(() => {
+    const nomeSalvo = localStorage.getItem("nome");
+    if (nomeSalvo) setNomeUsuario(nomeSalvo);
+
+  }, []);
+
+  const handleLogout = () => {
+  localStorage.clear();
+  window.location.href = "/login";
+  };
+
   return (
     <Container>
       {showOfficeModal && <OfficeDataModal show={true} onSubmit={handleOfficeSubmit} />}
@@ -182,6 +200,19 @@ export default function Peticoes() {
       <Header>
         <HeaderContentWrapper>
           <Title>Minhas Petições</Title>
+          <UsuarioWrapper>
+            <NomeUsuario>{nomeUsuario}</NomeUsuario>
+
+            <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
+              <AvatarCirculo>{nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}</AvatarCirculo>
+              {menuAberto && (
+                <DropdownMenu>
+                  <li>Meu perfil</li>
+                  <li onClick={handleLogout}>Sair</li>
+                </DropdownMenu>
+              )}
+            </AvatarMenuWrapper>
+          </UsuarioWrapper>
         </HeaderContentWrapper>
       </Header>
 
