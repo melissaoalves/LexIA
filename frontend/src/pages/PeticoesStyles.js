@@ -54,13 +54,39 @@ export const HeaderContentWrapper = styled.div`
 
 export const Title = styled.h1`
   font-weight: 700;
-  font-size: 1.75rem;
+  font-size: 2.0rem;
   color: ${colors.textPrimary};
   font-family: ${defaultFont};
-  box-shadow: ${shadow};
+  letter-spacing: 1px;
+  margin: 0;
+
+  @media (max-width: 600px) {
+    font-size: 1.3rem;
+  }
+`;
+
+export const Subtitulo = styled.h2`
+  font-family: ${defaultFont};
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: left;
+  margin: 1.2rem 0 1.2rem 1rem;
+  color: ${colors.textTerciary};
 
   @media (max-width: 600px) {
     font-size: 1.4rem;
+  }
+`;
+
+export const SearchTitle = styled.h2`
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: ${colors.textTerciary};
+  margin-bottom: 0.5rem;
+  font-family: ${defaultFont};
+
+  @media (max-width: 600px) {
+    text-align: center;
   }
 `;
 
@@ -369,6 +395,18 @@ export const WrapperCentralizado = styled.div`
   align-items: center;
   width: 100%;
   max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  font-family: ${defaultFont};
+`;
+
+export const WrapperLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  width: 100%;
+  max-width: 1330px;
   margin: 0 auto;
   padding: 0 1rem;
   box-sizing: border-box;
