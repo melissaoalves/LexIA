@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   LoginContainer,
   FormSection,
@@ -23,6 +24,29 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    if (senha !== confirmarSenha) {
+      alert("As senhas não coincidem.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:8000/auth/register/", {
+        nome,
+        email,
+        password: senha,
+      });
+
+      alert("Registro realizado com sucesso!");
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Erro no registro:", error);
+      alert("Erro ao registrar. Verifique os dados e tente novamente.");
+    }
+  };
 
   return (
     <LoginContainer>
@@ -85,7 +109,7 @@ export default function RegisterPage() {
             </TogglePasswordButton>
           </PasswordWrapper>
 
-          <Button type="submit">Registrar</Button>
+          <Button type="submit" onClick={handleRegister}>Registrar</Button>
 
           <FooterText>
             Já tem uma conta?{" "}
