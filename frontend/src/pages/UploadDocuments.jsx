@@ -32,6 +32,7 @@ import {
   HeaderContentWrapper,
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
+import OfficeDataModal from "../components/OfficeDataModal";
 
 const LoadingBar = () => (
   <div style={{
@@ -66,12 +67,9 @@ function formatFileSize(bytes) {
 
 function getFileThumbnail(file) {
   const ext = file.name.split(".").pop().toLowerCase();
-  if (ext === "pdf")
-    return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
-  if (ext === "doc" || ext === "docx")
-    return "https://cdn-icons-png.flaticon.com/512/337/337932.png";
-  if (ext === "png" || ext === "jpg" || ext === "jpeg")
-    return URL.createObjectURL(file);
+  if (ext === "pdf") return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
+  if (ext === "doc" || ext === "docx") return "https://cdn-icons-png.flaticon.com/512/337/337932.png";
+  if (ext === "png" || ext === "jpg" || ext === "jpeg") return URL.createObjectURL(file);
   return "https://cdn-icons-png.flaticon.com/512/565/565547.png";
 }
 
@@ -84,9 +82,10 @@ export default function Peticoes() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
-  const [modalStep, setModalStep] = useState("upload"); // upload, loading, edit, select
+  const [modalStep, setModalStep] = useState("upload");
   const [extractedText, setExtractedText] = useState("");
   const [selectedAdvogados, setSelectedAdvogados] = useState([]);
+  const [showOfficeModal, setShowOfficeModal] = useState(true);
 
   const advogadosDisponiveis = [
     { id: 1, nome: "Dr. Ana Paula" },
@@ -123,13 +122,6 @@ export default function Peticoes() {
         status: "Em andamento",
         dataCriacao: "2025-05-12",
         arquivo_peticao_url: "/files/peticao_2.docx",
-      },
-      {
-        id: 3,
-        nomeCliente: "Lucas Pereira",
-        status: "Concluído",
-        dataCriacao: "2025-05-14",
-        arquivo_peticao_url: "/files/peticao_3.docx",
       },
     ];
     setPeticoes(fetchedPeticoes);
@@ -178,13 +170,21 @@ export default function Peticoes() {
     simularExtracaoTexto();
   };
 
+  const handleOfficeSubmit = (data) => {
+    console.log("Dados do escritório:", data);
+    setShowOfficeModal(false);
+  };
+
   return (
     <Container>
+      {showOfficeModal && <OfficeDataModal show={true} onSubmit={handleOfficeSubmit} />}
+
       <Header>
         <HeaderContentWrapper>
           <Title>Minhas Petições</Title>
         </HeaderContentWrapper>
       </Header>
+
       <WrapperCentralizado>
         <SearchWrapper>
           <SearchInputWrapper>
@@ -233,8 +233,24 @@ export default function Peticoes() {
       </WrapperCentralizado>
 
       {modalOpen && (
-        <ModalBackdrop onClick={() => setModalOpen(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalBackdrop>
+          <ModalContent>
+            <button
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "transparent",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer"
+              }}
+              onClick={() => setModalOpen(false)}
+              aria-label="Fechar modal"
+            >
+              &times;
+            </button>
+
             <h2>Enviar documentos</h2>
 
             {modalStep === "upload" && (
@@ -261,22 +277,15 @@ export default function Peticoes() {
                   {selectedFiles.map((file, index) => (
                     <FileListItem key={index}>
                       <FileInfo>
-                        <FileThumbnail
-                          src={getFileThumbnail(file)}
-                          alt={file.name}
-                        />
+                        <FileThumbnail src={getFileThumbnail(file)} alt={file.name} />
                         <FileDetailsWrapper>
                           <FileName>{file.name}</FileName>
                           <FileDetails>
-                            {file.name.split(".").pop().toUpperCase()} •{" "}
-                            {formatFileSize(file.size)}
+                            {file.name.split(".").pop().toUpperCase()} • {formatFileSize(file.size)}
                           </FileDetails>
                         </FileDetailsWrapper>
                       </FileInfo>
-                      <RemoveButton
-                        onClick={() => removerArquivo(index)}
-                        title="Remover arquivo"
-                      >
+                      <RemoveButton onClick={() => removerArquivo(index)} title="Remover arquivo">
                         <FaTrash size={18} />
                       </RemoveButton>
                     </FileListItem>
@@ -304,12 +313,7 @@ export default function Peticoes() {
                 <label>Texto extraído (editável):</label>
                 <textarea
                   rows={8}
-                  style={{
-                    width: "100%",
-                    padding: "1rem",
-                    borderRadius: "8px",
-                    marginTop: "0.5rem",
-                  }}
+                  style={{ width: "100%", padding: "1rem", borderRadius: "8px", marginTop: "0.5rem" }}
                   value={extractedText}
                   onChange={(e) => setExtractedText(e.target.value)}
                 />
@@ -323,10 +327,7 @@ export default function Peticoes() {
               <div>
                 <h3>Selecionar advogados</h3>
                 {advogadosDisponiveis.map((adv) => (
-                  <label
-                    key={adv.id}
-                    style={{ display: "block", marginBottom: "0.5rem" }}
-                  >
+                  <label key={adv.id} style={{ display: "block", marginBottom: "0.5rem" }}>
                     <input
                       type="checkbox"
                       checked={selectedAdvogados.includes(adv.id)}

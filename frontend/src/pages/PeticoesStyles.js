@@ -171,7 +171,9 @@ export const ModalContent = styled.div`
   max-width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
+  position: relative; /* Necessário para o botão de fechar */
 `;
+
 
 export const DragDropArea = styled.div`
   border: 2px dashed ${colors.border};
@@ -378,4 +380,44 @@ export const LoadingBar = styled.div`
     50% { left: 100%; }
     100% { left: 100%; }
   }
+`;
+
+export const DadosModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+
+export const DadosModalContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+`;
+
+export const FormGroup = styled.div`
+  margin-bottom: 1rem;
+`;
+
+export const Label = styled.label`
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+`;
+
+export const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  font-size: 1rem;
+  background: ${colors.lightGray};
+  color: ${colors.textPrimary};
 `;
