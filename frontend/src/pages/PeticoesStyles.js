@@ -560,3 +560,25 @@ export const DropdownMenu = styled.ul`
     }
   }
 `;
+
+export const NavMenu = styled.nav`
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+
+  a {
+    color: ${colors.textPrimary};
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      color: ${colors.accentHover};
+    }
+  }
+`;
+
+export const HeaderLeftGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+`;

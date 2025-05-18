@@ -38,6 +38,8 @@ import {
   DropdownMenu,
   Subtitulo,
   WrapperLeft,
+  NavMenu,
+  HeaderLeftGroup
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import OfficeDataModal from "../components/OfficeDataModal";
@@ -89,7 +91,7 @@ function getFileThumbnail(file) {
 }
 
 export default function Peticoes() {
-  const [loadingEscritorio, setLoadingEscritorio] = useState(true);
+  const [loadingEscritorio] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [menuAberto, setMenuAberto] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -226,7 +228,8 @@ export default function Peticoes() {
         });
 
         if (error.response.status === 401) {
-          alert("Sessão expirada. Faça login novamente.");
+          localStorage.clear();
+          window.location.href = "/login";
         } else {
           alert("Erro ao salvar dados. Verifique os campos e tente novamente.");
         }
@@ -254,11 +257,13 @@ export default function Peticoes() {
         }
       })
       .catch((error) => {
-        console.log("Erro ao buscar escritório:", error);
-        setShowOfficeModal(true); // escritório não existe ou erro
-      })
-      .finally(() => {
-        setLoadingEscritorio(false); // finaliza o carregamento
+        if (error.response && error.response.status === 401) {
+          localStorage.clear();
+          window.location.href = "/login";
+        } else {
+          console.log("Erro ao buscar escritório:", error);
+          setShowOfficeModal(true);
+        }
       });
   }, []);
 
@@ -276,23 +281,29 @@ export default function Peticoes() {
 
       <Header>
         <HeaderContentWrapper>
-          <Title>LexIA</Title>
-          <UsuarioWrapper>
-            <NomeUsuario>{nomeUsuario}</NomeUsuario>
+            <HeaderLeftGroup>
+              <Title>LexIA</Title>
+              <NavMenu>
+                <a href="/peticoes">Petições</a>
+                <a href="/advogados">Advogados</a>
+              </NavMenu>
+            </HeaderLeftGroup>
 
-            <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
-              <AvatarCirculo>
-                {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
-              </AvatarCirculo>
-              {menuAberto && (
-                <DropdownMenu>
-                  <li>Meu perfil</li>
-                  <li onClick={handleLogout}>Sair</li>
-                </DropdownMenu>
-              )}
-            </AvatarMenuWrapper>
-          </UsuarioWrapper>
-        </HeaderContentWrapper>
+            <UsuarioWrapper>
+              <NomeUsuario>{nomeUsuario}</NomeUsuario>
+              <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
+                <AvatarCirculo>
+                  {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
+                </AvatarCirculo>
+                {menuAberto && (
+                  <DropdownMenu>
+                    <li>Meu perfil</li>
+                    <li onClick={handleLogout}>Sair</li>
+                  </DropdownMenu>
+                )}
+              </AvatarMenuWrapper>
+            </UsuarioWrapper>
+          </HeaderContentWrapper>
       </Header>
 
       <WrapperLeft>
