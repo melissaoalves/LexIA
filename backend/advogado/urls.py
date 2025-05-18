@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AdvogadoViewSet, EscritorioUpdateView, EscritorioViewSet, CausaViewSet
+from .views import AdvogadoViewSet, EscritorioMeView, EscritorioViewSet, CausaViewSet
 from . import views
 
 router = DefaultRouter()
@@ -11,5 +11,5 @@ router.register(r'causas', CausaViewSet)
 urlpatterns = [
     path('', views.home, name='home'),  # Página inicial
     path('api/', include(router.urls)),
-    path('escritorio/me/', EscritorioUpdateView.as_view(), name='atualizar-escritorio'),
+    path('escritorio/me/', EscritorioMeView.as_view(), name='escritorio-me'),
 ]

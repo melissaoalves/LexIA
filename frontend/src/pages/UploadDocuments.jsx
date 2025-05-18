@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import {
   Container,
   Header,
@@ -177,15 +178,71 @@ export default function Peticoes() {
     simularExtracaoTexto();
   };
 
-  const handleOfficeSubmit = (data) => {
-    console.log("Dados do escritório:", data);
-    setShowOfficeModal(false);
+  const handleOfficeSubmit = async (formData) => {
+    const token = localStorage.getItem("accessToken");
+
+    console.log("Token JWT recuperado:", token);
+
+    if (!token) {
+      alert("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    try {
+      // Confirma os dados que estão sendo enviados
+      console.log("Payload enviado:", formData);
+
+      const response = await axios.patch("http://localhost:8000/escritorio/me/", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // DEBUG: Verifica a resposta da API
+      console.log("Resposta da API:", response.data);
+
+      setShowOfficeModal(false);
+    } catch (error) {
+      // DEBUG: Detalha erro de autenticação ou outro
+      if (error.response) {
+        console.error("Erro ao salvar dados do escritório:", {
+          status: error.response.status,
+          data: error.response.data,
+        });
+
+        if (error.response.status === 401) {
+          alert("Sessão expirada. Faça login novamente.");
+        } else {
+          alert("Erro ao salvar dados. Verifique os campos e tente novamente.");
+        }
+      } else {
+        console.error("Erro na requisição:", error.message);
+        alert("Erro de conexão com o servidor.");
+      }
+    }
   };
 
+
   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
     const nomeSalvo = localStorage.getItem("nome");
     if (nomeSalvo) setNomeUsuario(nomeSalvo);
 
+    axios.get("http://localhost:8000/escritorio/me/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      if (response.data && response.data.nome) {
+        setShowOfficeModal(false);  // escritório já está cadastrado
+      }
+    })
+    .catch((error) => {
+      console.log("Erro ao buscar escritório:", error);
+      setShowOfficeModal(true);  // escritório não existe ou erro
+    });
   }, []);
 
   const handleLogout = () => {

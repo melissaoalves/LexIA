@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import axios from "axios";
 
 const Overlay = styled.div`
   position: fixed;
@@ -88,19 +89,78 @@ export default function OfficeDataModal({ show, onSubmit }) {
     cep: "",
     logradouro: "",
     numero: "",
-    complemento: "", // opcional
+    complemento: "",
     bairro: "",
     cidade: "",
     estado: "",
+    email: "",
   });
+
+  const [logo, setLogo] = useState(null);
+  const [userData, setUserData] = useState({ nome: "", email: "" });
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (show && token) {
+      axios
+        .get("http://localhost:8000/auth/me/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          setUserData(res.data);
+          setFormData((prev) => ({
+            ...prev,
+            nome: res.data.nome,
+            email: res.data.email,
+          }));
+        })
+        .catch((err) => {
+          console.error("Erro ao buscar dados do usuário:", err);
+        });
+    }
+  }, [show]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  const handleFileChange = (e) => {
+    setLogo(e.target.files[0]);
+  };
+
   const isFormValid = Object.entries(formData).every(
-    ([key, value]) =>
-      key === "complemento" ? true : value.trim() !== ""
+    ([key, value]) => (key === "complemento" ? true : value.trim() !== "")
   );
+
+  const handleSubmit = () => {
+    const token = localStorage.getItem("accessToken");
+
+    const data = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      data.append(key, value);
+    });
+
+    if (logo) {
+      data.append("logo", logo);
+    }
+
+    axios
+      .patch("http://localhost:8000/escritorio/me/", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {
+        onSubmit(); // fecha o modal no componente pai
+      })
+      .catch((err) => {
+        console.error("Erro ao enviar os dados:", err);
+        alert("Erro ao enviar dados. Verifique os campos.");
+      });
+  };
 
   if (!show) return null;
 
@@ -112,61 +172,71 @@ export default function OfficeDataModal({ show, onSubmit }) {
         <Grid>
           <FullWidth>
             <Label>Nome do Escritório</Label>
-            <Input name="nome" value={formData.nome} onChange={handleChange} placeholder="Digite o nome" />
+            <Input name="nome" value={formData.nome} onChange={handleChange} />
+          </FullWidth>
+
+          <FullWidth>
+            <Label>Email</Label>
+            <Input name="email" value={formData.email} onChange={handleChange} />
           </FullWidth>
 
           <div>
             <Label>CNPJ</Label>
-            <Input name="cnpj" value={formData.cnpj} onChange={handleChange} placeholder="00.000.000/0000-00" />
+            <Input name="cnpj" value={formData.cnpj} onChange={handleChange} />
           </div>
 
           <div>
             <Label>OAB</Label>
-            <Input name="oab" value={formData.oab} onChange={handleChange} placeholder="Ex: OAB/UF 00000" />
+            <Input name="oab" value={formData.oab} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Telefone</Label>
-            <Input name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(00) 0000-0000" />
+            <Input name="telefone" value={formData.telefone} onChange={handleChange} />
           </div>
 
           <div>
             <Label>CEP</Label>
-            <Input name="cep" value={formData.cep} onChange={handleChange} placeholder="00000-000" />
+            <Input name="cep" value={formData.cep} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Logradouro</Label>
-            <Input name="logradouro" value={formData.logradouro} onChange={handleChange} placeholder="Rua, avenida..." />
+            <Input name="logradouro" value={formData.logradouro} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Número</Label>
-            <Input name="numero" value={formData.numero} onChange={handleChange} placeholder="Ex: 123" />
+            <Input name="numero" value={formData.numero} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Complemento</Label>
-            <Input name="complemento" value={formData.complemento} onChange={handleChange} placeholder="Apto, sala..." />
+            <Input name="complemento" value={formData.complemento} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Bairro</Label>
-            <Input name="bairro" value={formData.bairro} onChange={handleChange} placeholder="Digite o bairro" />
+            <Input name="bairro" value={formData.bairro} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Cidade</Label>
-            <Input name="cidade" value={formData.cidade} onChange={handleChange} placeholder="Digite a cidade" />
+            <Input name="cidade" value={formData.cidade} onChange={handleChange} />
           </div>
 
           <div>
             <Label>Estado</Label>
-            <Input name="estado" value={formData.estado} onChange={handleChange} placeholder="UF" />
+            <Input name="estado" value={formData.estado} onChange={handleChange} />
           </div>
+
+          <FullWidth>
+            <Label>Logo do Escritório</Label>
+            <Input type="file" accept="image/*" onChange={handleFileChange} />
+          </FullWidth>
         </Grid>
 
-        <Button disabled={!isFormValid} onClick={() => onSubmit(formData)}>
+        <Button disabled={!isFormValid} onClick={handleSubmit}>
           Salvar Dados
         </Button>
       </ModalBox>

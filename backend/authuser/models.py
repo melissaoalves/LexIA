@@ -23,11 +23,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     data_criacao = models.DateTimeField(auto_now_add=True)
 
-    objects = UserManager()
+    # Associa um escritório a esse usuário
+    escritorio = models.OneToOneField('upload.Escritorio', on_delete=models.CASCADE, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['nome']
 
+    objects = UserManager()
 
     def __str__(self):
         return self.email

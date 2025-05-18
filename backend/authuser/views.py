@@ -7,6 +7,8 @@ from .models import User
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 class CustomTokenSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -25,12 +27,15 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
-class MeView(generics.RetrieveAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request):
+        user = request.user
+        return Response({
+            "nome": user.nome,
+            "email": user.email
+        })
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
