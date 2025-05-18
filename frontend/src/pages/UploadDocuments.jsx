@@ -35,10 +35,13 @@ import {
   NomeUsuario,
   UsuarioWrapper,
   AvatarMenuWrapper,
-  DropdownMenu
+  DropdownMenu,
+  Subtitulo,
+  WrapperLeft
 } from "./PeticoesStyles";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import OfficeDataModal from "../components/OfficeDataModal";
+
 
 const LoadingBar = () => (
   <div style={{
@@ -256,7 +259,7 @@ export default function Peticoes() {
 
       <Header>
         <HeaderContentWrapper>
-          <Title>Minhas Petições</Title>
+          <Title>LexIA</Title>
           <UsuarioWrapper>
             <NomeUsuario>{nomeUsuario}</NomeUsuario>
 
@@ -272,8 +275,13 @@ export default function Peticoes() {
           </UsuarioWrapper>
         </HeaderContentWrapper>
       </Header>
+      
+      <WrapperLeft>
+        <Subtitulo>Minhas Petições</Subtitulo>
+      </WrapperLeft>
 
       <WrapperCentralizado>
+        
         <SearchWrapper>
           <SearchInputWrapper>
             <SearchIcon />
