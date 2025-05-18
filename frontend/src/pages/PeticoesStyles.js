@@ -3,8 +3,9 @@ import { FaSearch } from "react-icons/fa";
 
 const colors = {
   background: "#f4f4fc",
-  textPrimary: "#2d2d2d",
+  textPrimary: "#ffffff",
   textSecondary: "#b0b0b0",
+  textTerciary: "#2d2d2d",
   border: "#cccccc",
   accent: "#2d2d2d",
   accentHover: "#e6ce92",
@@ -14,13 +15,17 @@ const colors = {
   marginTop: "#ffdfa1"
 };
 
+const defaultFont = `"Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif`;
+const shadow = `0 2px 8px rgba(0, 0, 0, 0.06)`;
+
 export const Container = styled.div`
   background: ${colors.background};
   min-height: 100vh;
   padding: 6rem 1rem 2rem 1rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: ${colors.textPrimary};
+  font-family: ${defaultFont};
+  color: ${colors.textTerciary};
   box-sizing: border-box;
+  box-shadow: ${shadow};
 `;
 
 export const Header = styled.div`
@@ -28,12 +33,13 @@ export const Header = styled.div`
   top: 0;
   left: 0;
   width: 100vw;
-  background-color: ${colors.border};
+  background-color: ${colors.accent};
   display: flex;
   justify-content: center;
   padding: 1.5rem 2rem;
   z-index: 1000;
-  box-sizing: border-box;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const HeaderContentWrapper = styled.div`
@@ -43,11 +49,15 @@ export const HeaderContentWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: ${defaultFont};
 `;
 
 export const Title = styled.h1`
   font-weight: 700;
   font-size: 1.75rem;
+  color: ${colors.textPrimary};
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   @media (max-width: 600px) {
     font-size: 1.4rem;
@@ -58,12 +68,13 @@ export const CreateButton = styled.button`
   padding: 0.6rem 1.9rem;
   background-color: ${colors.accent};
   color: ${colors.tagText};
-  font-weight: 900;
+  font-weight: 700;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  height: 100%;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &:hover {
     background-color: ${colors.accentHover};
@@ -84,11 +95,21 @@ export const PeticoesContainer = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   @media (max-width: 600px) {
     height: auto;
   }
 `;
+
+export const PeticaoInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: ${defaultFont};
+`;
+
 
 export const PeticaoCard = styled.div`
   display: flex;
@@ -97,7 +118,9 @@ export const PeticaoCard = styled.div`
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background-color: ${colors.lightGray};
-  width: 100%;
+  transition: background-color 0.2s ease;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &:hover {
     background-color: rgba(224, 224, 224, 0.57);
@@ -110,26 +133,21 @@ export const PeticaoCard = styled.div`
   }
 `;
 
-export const PeticaoInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-`;
-
 export const ClienteNome = styled.span`
-  font-weight: bold;
-  font-size: 0.95rem;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: ${defaultFont};
 `;
 
 export const ClienteDetalhes = styled.span`
   font-size: 0.9rem;
   color: ${colors.textSecondary};
+  font-family: ${defaultFont};
+  line-height: 1.6; /* aumenta o espaçamento entre linhas */
 `;
 
 export const DownloadButton = styled.a`
   margin-left: auto;
-  padding-left: 2rem;
-  background: none;
   padding: 0.5rem;
   border-radius: 6px;
   text-decoration: none;
@@ -138,19 +156,11 @@ export const DownloadButton = styled.a`
   justify-content: center;
   color: ${colors.accent};
   transition: background-color 0.3s ease;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &:hover {
     color: ${colors.accentHover};
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  @media (max-width: 600px) {
-    align-self: flex-end;
-    margin-left: 0;
   }
 `;
 
@@ -161,6 +171,7 @@ export const ModalBackdrop = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: ${defaultFont};
 `;
 
 export const ModalContent = styled.div`
@@ -171,9 +182,10 @@ export const ModalContent = styled.div`
   max-width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  position: relative; /* Necessário para o botão de fechar */
+  position: relative;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
-
 
 export const DragDropArea = styled.div`
   border: 2px dashed ${colors.border};
@@ -184,6 +196,8 @@ export const DragDropArea = styled.div`
   background-color: ${colors.lightGray};
   cursor: pointer;
   margin-bottom: 1rem;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &.drag-over {
     background-color: ${colors.accentHover};
@@ -205,6 +219,8 @@ export const SubmitButton = styled.button`
   width: 100%;
   color: ${colors.tagText};
   margin-top: 1rem;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &:hover {
     background-color: ${colors.accentHover};
@@ -220,6 +236,7 @@ export const FileList = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
+  font-family: ${defaultFont};
 `;
 
 export const FileListItem = styled.li`
@@ -231,12 +248,15 @@ export const FileListItem = styled.li`
   margin-bottom: 0.5rem;
   border-radius: 8px;
   border: 1px solid ${colors.border};
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const FileInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  font-family: ${defaultFont};
 `;
 
 export const FileThumbnail = styled.img`
@@ -249,15 +269,18 @@ export const FileThumbnail = styled.img`
 export const FileDetailsWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  font-family: ${defaultFont};
 `;
 
 export const FileName = styled.span`
   font-weight: 600;
+  font-family: ${defaultFont};
 `;
 
 export const FileDetails = styled.span`
   font-size: 0.85rem;
   color: ${colors.textSecondary};
+  font-family: ${defaultFont};
 `;
 
 export const RemoveButton = styled.button`
@@ -266,9 +289,10 @@ export const RemoveButton = styled.button`
   cursor: pointer;
   padding: 0;
   margin-left: 1rem;
-  color: ${colors.textPrimary};
+  color: ${colors.textTerciary};
   display: flex;
   align-items: center;
+  font-family: ${defaultFont};
 
   &:hover {
     color: #b00020;
@@ -283,12 +307,14 @@ export const SearchWrapper = styled.div`
   gap: 1rem;
   width: 100%;
   margin-bottom: 1.5rem;
+  font-family: ${defaultFont};
 `;
 
 export const SearchInputWrapper = styled.div`
   position: relative;
   flex-grow: 1;
   min-width: 250px;
+  font-family: ${defaultFont};
 
   @media (max-width: 600px) {
     width: 100%;
@@ -305,7 +331,9 @@ export const SearchInput = styled.input`
   border-radius: 8px;
   outline: none;
   background-color: ${colors.lightGray};
-  color: ${colors.textPrimary};
+  color: ${colors.textTerciary};
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &::placeholder {
     color: ${colors.textSecondary};
@@ -332,6 +360,7 @@ export const StatusText = styled.span`
   border-radius: 999px;
   font-weight: 600;
   font-size: 0.85rem;
+  font-family: ${defaultFont};
 `;
 
 export const WrapperCentralizado = styled.div`
@@ -343,6 +372,7 @@ export const WrapperCentralizado = styled.div`
   margin: 0 auto;
   padding: 0 1rem;
   box-sizing: border-box;
+  font-family: ${defaultFont};
 `;
 
 export const TextAreaEditavel = styled.textarea`
@@ -354,7 +384,9 @@ export const TextAreaEditavel = styled.textarea`
   font-size: 1rem;
   resize: vertical;
   background-color: ${colors.lightGray};
-  color: ${colors.textPrimary};
+  color: ${colors.textTerciary};
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const LoadingBar = styled.div`
@@ -365,6 +397,8 @@ export const LoadingBar = styled.div`
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 
   &::after {
     content: "";
@@ -390,6 +424,7 @@ export const DadosModalOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  font-family: ${defaultFont};
 `;
 
 export const DadosModalContent = styled.div`
@@ -400,16 +435,20 @@ export const DadosModalContent = styled.div`
   max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const FormGroup = styled.div`
   margin-bottom: 1rem;
+  font-family: ${defaultFont};
 `;
 
 export const Label = styled.label`
   display: block;
   font-weight: 600;
   margin-bottom: 0.25rem;
+  font-family: ${defaultFont};
 `;
 
 export const Input = styled.input`
@@ -419,18 +458,22 @@ export const Input = styled.input`
   border-radius: 8px;
   font-size: 1rem;
   background: ${colors.lightGray};
-  color: ${colors.textPrimary};
+  color: ${colors.textTerciary};
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const UsuarioWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  font-family: ${defaultFont};
 `;
 
 export const NomeUsuario = styled.span`
   font-weight: 600;
   color: ${colors.textPrimary};
+  font-family: ${defaultFont};
 `;
 
 export const AvatarCirculo = styled.div`
@@ -444,11 +487,14 @@ export const AvatarCirculo = styled.div`
   color: ${colors.accent};
   font-weight: bold;
   text-transform: uppercase;
+  font-family: ${defaultFont};
+  box-shadow: ${shadow};
 `;
 
 export const AvatarMenuWrapper = styled.div`
   position: relative;
   cursor: pointer;
+  font-family: ${defaultFont};
 `;
 
 export const DropdownMenu = styled.ul`
@@ -461,13 +507,14 @@ export const DropdownMenu = styled.ul`
   list-style: none;
   padding: 0.5rem 0;
   margin: 0;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: ${shadow};
   z-index: 999;
+  font-family: ${defaultFont};
 
   li {
     padding: 0.6rem 1.2rem;
     font-size: 0.95rem;
-    color: ${colors.textPrimary};
+    color: ${colors.textTerciary};
     cursor: pointer;
 
     &:hover {
