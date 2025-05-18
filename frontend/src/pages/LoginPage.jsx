@@ -13,6 +13,7 @@ import {
   OAuthButton,
   StyledLink
 } from "./LoginStyles";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   return (
@@ -36,13 +37,13 @@ export default function LoginPage() {
           </OAuthContainer>
 
           <FooterText>
-            Não tem conta? <StyledLink to="/registrar">Registrar</StyledLink>
+            Não tem conta? <Link to="/registrar">Registrar</Link>
           </FooterText>
         </Form>
       </FormSection>
 
       <VisualSection>
-        <p>Transforme dados em decisões inteligentes.</p>
+        <p>Deixe a burocracia com a gente. Você só precisa enviar os documentos.</p>
       </VisualSection>
     </LoginContainer>
   );
