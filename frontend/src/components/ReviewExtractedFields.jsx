@@ -53,9 +53,13 @@ export default function ReviewExtractedFields({ fields, setFields, onConfirm }) 
     setFields({ ...fields, [e.target.name]: e.target.value });
   };
 
+  const entriesParaExibir = Object
+    .entries(fields)
+    .filter(([key]) => key !== "advogados");
+
   return (
     <Container>
-      {Object.entries(fields).map(([key, value]) => (
+      {entriesParaExibir.map(([key, value]) => (
         <FieldGroup key={key}>
           <Label>{fieldLabels[key] || key}</Label>
           <Input name={key} value={value} onChange={handleChange} />
