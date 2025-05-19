@@ -18,6 +18,7 @@ import {
   NavMenu,
   HeaderLeftGroup
 } from "./PeticoesStyles";
+
 import OfficeDataModal from "../components/OfficeDataModal";
 import SearchBar from "../components/SearchBar";
 import DocumentDropZone from "../components/DocumentDropZone";
@@ -25,22 +26,37 @@ import LoadingStatus from "../components/LoadingStatus";
 import ReviewExtractedFields from "../components/ReviewExtractedFields";
 import SuccessMessage from "../components/SuccessMessage";
 import PeticoesList from "../components/PeticoesList";
+import LawyersSelection from "../components/LawyersSelection";
 
 export default function Peticoes() {
   const [loadingEscritorio, setLoadingEscritorio] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [menuAberto, setMenuAberto] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState("upload");
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [lawyers, setLawyers] = useState([]);
+  const [selectedAdvogados, setSelectedAdvogados] = useState([]);
   const [peticoes, setPeticoes] = useState([]);
   const [filteredPeticoes, setFilteredPeticoes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dragOver, setDragOver] = useState(false);
-  const fileInputRef = useRef(null);
-  const [modalStep, setModalStep] = useState("upload");
   const [statusMensagem, setStatusMensagem] = useState("");
   const [dadosExtraidos, setDadosExtraidos] = useState({});
   const [showOfficeModal, setShowOfficeModal] = useState(true);
+
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // busca advogados do escritório
+    const token = localStorage.getItem("accessToken");
+    axios
+      .get("http://localhost:8000/advogados/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setLawyers(res.data))
+      .catch((err) => console.error("Erro ao buscar advogados:", err));
+  }, []);
 
   const atualizarPeticoes = async () => {
     const token = localStorage.getItem("accessToken");
@@ -116,30 +132,30 @@ export default function Peticoes() {
     const token = localStorage.getItem("accessToken");
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append("documentos", file));
+    // adiciona advogados selecionados
+    selectedAdvogados.forEach((id) => formData.append("advogados", id));
 
     setModalStep("processing");
     setStatusMensagem("Extraindo textos dos documentos...");
 
     try {
-      const res = await axios.post(
-        "http://localhost:8000/api/upload/",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await axios.post("http://localhost:8000/api/upload/", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setStatusMensagem("Estruturando dados com IA...");
 
       setTimeout(async () => {
         await atualizarPeticoes();
         const novaPeticao = res.data.peticao;
-        setDadosExtraidos(typeof novaPeticao.dados_extraidos === "string"
-        ? JSON.parse(novaPeticao.dados_extraidos)
-        : novaPeticao.dados_extraidos);
+        setDadosExtraidos(
+          typeof novaPeticao.dados_extraidos === "string"
+            ? JSON.parse(novaPeticao.dados_extraidos)
+            : novaPeticao.dados_extraidos
+        );
         setModalStep("review");
       }, 2000);
     } catch (error) {
@@ -181,29 +197,29 @@ export default function Peticoes() {
 
       <Header>
         <HeaderContentWrapper>
-            <HeaderLeftGroup>
-              <Title>LexIA</Title>
-              <NavMenu>
-                <a href="/peticoes">Petições</a>
-                <a href="/advogados">Advogados</a>
-              </NavMenu>
-            </HeaderLeftGroup>
+          <HeaderLeftGroup>
+            <Title>LexIA</Title>
+            <NavMenu>
+              <a href="/peticoes">Petições</a>
+              <a href="/advogados">Advogados</a>
+            </NavMenu>
+          </HeaderLeftGroup>
 
-            <UsuarioWrapper>
-              <NomeUsuario>{nomeUsuario}</NomeUsuario>
-              <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
-                <AvatarCirculo>
-                  {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
-                </AvatarCirculo>
-                {menuAberto && (
-                  <DropdownMenu>
-                    <li>Meu perfil</li>
-                    <li onClick={handleLogout}>Sair</li>
-                  </DropdownMenu>
-                )}
-              </AvatarMenuWrapper>
-            </UsuarioWrapper>
-          </HeaderContentWrapper>
+          <UsuarioWrapper>
+            <NomeUsuario>{nomeUsuario}</NomeUsuario>
+            <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
+              <AvatarCirculo>
+                {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
+              </AvatarCirculo>
+              {menuAberto && (
+                <DropdownMenu>
+                  <li>Meu perfil</li>
+                  <li onClick={handleLogout}>Sair</li>
+                </DropdownMenu>
+              )}
+            </AvatarMenuWrapper>
+          </UsuarioWrapper>
+        </HeaderContentWrapper>
       </Header>
 
       <WrapperLeft>
@@ -216,10 +232,10 @@ export default function Peticoes() {
           setSearchTerm={setSearchTerm}
           onCreateClick={() => {
             setModalOpen(true);
-            setModalStep("upload");
+            setModalStep("selectLawyers");
             setSelectedFiles([]);
             setDadosExtraidos({});
-            setStatusMensagem("");
+            setSelectedAdvogados([]);
           }}
         />
 
@@ -245,7 +261,14 @@ export default function Peticoes() {
               &times;
             </button>
 
-            <h2>Enviar documentos</h2>
+            {modalStep === "selectLawyers" && (
+              <LawyersSelection
+                lawyers={lawyers}
+                selected={selectedAdvogados}
+                setSelected={setSelectedAdvogados}
+                onNext={() => setModalStep("upload")}
+              />
+            )}
 
             {modalStep === "upload" && (
               <DocumentDropZone
@@ -262,7 +285,7 @@ export default function Peticoes() {
             )}
 
             {modalStep === "processing" && (
-              <LoadingStatus status={statusMensagem} />
+              <LoadingStatus text={statusMensagem} />
             )}
 
             {modalStep === "review" && (

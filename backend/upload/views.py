@@ -9,13 +9,14 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Documento, Causa
+from .models import Documento, Causa, Advogado
 from .serializers import DocumentoSerializer, CausaSerializer
 from ocr.services import extrair_dados_peticao
 from pdf_extraction.services import gerar_peticao
 from pathlib import Path
 import google.generativeai as genai
 
+# Configuração do Gemini
 genai.configure(api_key=settings.GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-pro-latest')
 
@@ -33,10 +34,14 @@ class DocumentoUploadView(APIView):
         if not escritorio:
             return Response({"detail": "Usuário não possui escritório vinculado."}, status=400)
 
+        # IDs dos advogados selecionados
+        selected_adv_ids = request.data.getlist('advogados')
+
         arquivos = request.FILES.getlist('documentos')
         documentos_processados = []
         full_text_total = ""
 
+        # Processa cada arquivo: PDF ou imagem
         for arquivo in arquivos:
             texto_extraido = ""
             try:
@@ -45,7 +50,6 @@ class DocumentoUploadView(APIView):
                     with open(temp_pdf_path, 'wb+') as temp_file:
                         for chunk in arquivo.chunks():
                             temp_file.write(chunk)
-
                     images = convert_from_path(temp_pdf_path, dpi=300)
                     full_text = ""
                     for img in images:
@@ -63,7 +67,6 @@ class DocumentoUploadView(APIView):
                     with open(temp_image_path, 'wb+') as temp_file:
                         for chunk in arquivo.chunks():
                             temp_file.write(chunk)
-
                     img = Image.open(temp_image_path)
                     response = model.generate_content(["Leia o texto desta imagem.", img])
                     response.resolve()
@@ -86,17 +89,27 @@ class DocumentoUploadView(APIView):
                 'texto_extraido': texto_extraido,
             })
 
+        # Chama serviço de IA para extrair dados
         raw_dados = extrair_dados_peticao(full_text_total)
-
         try:
             dados_estruturados = json.loads(raw_dados) if isinstance(raw_dados, str) else raw_dados
         except Exception as e:
             print("Erro ao interpretar JSON:", e)
             dados_estruturados = {}
-        except Exception as e:
-            print("Erro na extração de dados:", e)
-            dados_estruturados = {}
 
+        # Monta contexto de advogados selecionados
+        adv_objs = Advogado.objects.filter(id__in=selected_adv_ids, escritorio=escritorio)
+        adv_context = [
+            {
+                'nome': adv.nome,
+                'uf': adv.escritorio.estado or '',
+                'oab': adv.oab
+            }
+            for adv in adv_objs
+        ]
+        dados_estruturados['advogados'] = adv_context
+
+        # Cria modelo Causa e associa documentos
         nome_cliente = dados_estruturados.get("nome_autor", "Cliente Desconhecido")
         peticao = Causa.objects.create(
             nome_cliente=nome_cliente,
@@ -104,13 +117,11 @@ class DocumentoUploadView(APIView):
             dados_extraidos=json.dumps(dados_estruturados, ensure_ascii=False),
             escritorio=escritorio
         )
-        
-        # Associa os documentos à petição
         for doc in Documento.objects.filter(id__in=[d['id'] for d in documentos_processados]):
             doc.causa = peticao
             doc.save()
 
-        # Geração da petição
+        # Gera o .docx com docxtpl
         caminho_template = os.path.join('templates', 'peticao_bpc_loas.docx')
         caminho_saida = os.path.join(TEMP_DIR, f'peticao_{peticao.id}.docx')
         gerar_peticao(json.dumps(dados_estruturados, ensure_ascii=False), caminho_template, caminho_saida)
@@ -126,7 +137,6 @@ class DocumentoUploadView(APIView):
             },
             'documentos': documentos_processados
         }, status=201)
-
 
 class ListaPeticoesView(APIView):
     authentication_classes = [JWTAuthentication]
