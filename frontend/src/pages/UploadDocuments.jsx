@@ -15,6 +15,8 @@ import {
   AvatarCirculo,
   NomeUsuario,
   DropdownMenu,
+  NavMenu,
+  HeaderLeftGroup
 } from "./PeticoesStyles";
 import OfficeDataModal from "../components/OfficeDataModal";
 import SearchBar from "../components/SearchBar";
@@ -179,22 +181,29 @@ export default function Peticoes() {
 
       <Header>
         <HeaderContentWrapper>
-          <Title>LexIA</Title>
-          <UsuarioWrapper>
-            <NomeUsuario>{nomeUsuario}</NomeUsuario>
-            <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
-              <AvatarCirculo>
-                {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
-              </AvatarCirculo>
-              {menuAberto && (
-                <DropdownMenu>
-                  <li>Meu perfil</li>
-                  <li onClick={handleLogout}>Sair</li>
-                </DropdownMenu>
-              )}
-            </AvatarMenuWrapper>
-          </UsuarioWrapper>
-        </HeaderContentWrapper>
+            <HeaderLeftGroup>
+              <Title>LexIA</Title>
+              <NavMenu>
+                <a href="/peticoes">Petições</a>
+                <a href="/advogados">Advogados</a>
+              </NavMenu>
+            </HeaderLeftGroup>
+
+            <UsuarioWrapper>
+              <NomeUsuario>{nomeUsuario}</NomeUsuario>
+              <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
+                <AvatarCirculo>
+                  {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
+                </AvatarCirculo>
+                {menuAberto && (
+                  <DropdownMenu>
+                    <li>Meu perfil</li>
+                    <li onClick={handleLogout}>Sair</li>
+                  </DropdownMenu>
+                )}
+              </AvatarMenuWrapper>
+            </UsuarioWrapper>
+          </HeaderContentWrapper>
       </Header>
 
       <WrapperLeft>
