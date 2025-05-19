@@ -1,6 +1,5 @@
-import React, { useState,  useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-
 import {
   Container,
   Header,
@@ -26,8 +25,11 @@ import {
   Label,
   Input,
   SubmitButton,
-  TituloComAcoes
+  TituloComAcoes,
+  CloseButton,
+  ModalHeading,
 } from "./AdvogadosStyles";
+import { FaTrash } from "react-icons/fa";
 
 export default function Advogados() {
   const [nomeUsuario, setNomeUsuario] = useState("");
@@ -36,69 +38,110 @@ export default function Advogados() {
   const [novoNome, setNovoNome] = useState("");
   const [novoEmail, setNovoEmail] = useState("");
   const [novaOAB, setNovaOAB] = useState("");
-  const [advogados, setAdvogados] = useState([
-    {
-      id: 1,
-      nome: "Beatriz Correia da Silva Siqueira",
-      email: "beatrizsiquiera@hotmail.com",
-      oab: "12345/SP",
-    },
-    {
-      id: 2,
-      nome: "Fernando Oliveira Veres da Luz",
-      email: "fernandooliveiraveres@gmail.com",
-      oab: "67890/RJ",
-    },
-  ]);
+  const [advogados, setAdvogados] = useState([]);
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
 
-  const adicionarAdvogado = () => {
-    const novo = {
-      id: Date.now(),
-      nome: novoNome,
-      email: novoEmail,
-      oab: novaOAB,
-    };
-    setAdvogados((prev) => [...prev, novo]);
-    setNovoNome("");
-    setNovoEmail("");
-    setNovaOAB("");
-    setModalOpen(false);
+  const isEmailValido = (email) => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
+  const buscarAdvogados = () => {
+    const token = localStorage.getItem("accessToken");
+
+    axios
+      .get("http://localhost:8000/advogados/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setAdvogados(res.data);
+      })
+      .catch((err) => {
+        console.log("Erro ao buscar advogados:", err);
+      });
+  };
+
+  const adicionarAdvogado = async () => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!novoNome || !novoEmail || !novaOAB) {
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    if (!isEmailValido(novoEmail)) {
+      alert("Digite um e-mail válido.");
+      return;
+    }
+
+    try {
+      const { data: escritorio } = await axios.get("http://localhost:8000/escritorio/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const payload = {
+        nome: novoNome.trim(),
+        email: novoEmail.trim(),
+        oab: novaOAB.trim(),
+        escritorio: escritorio.id,
+      };
+
+      const { data: advogadoCriado } = await axios.post(
+        "http://localhost:8000/advogados/",
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setAdvogados((prev) => [...prev, advogadoCriado]);
+      setNovoNome("");
+      setNovoEmail("");
+      setNovaOAB("");
+      setModalOpen(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar advogado:", error);
+      console.log("Detalhes:", error.response?.data);
+    }
+  };
+
+  const deletarAdvogado = async (id) => {
+    const confirmacao = window.confirm("Deseja mesmo excluir este advogado?");
+    if (!confirmacao) return;
+
+    const token = localStorage.getItem("accessToken");
+
+    try {
+      await axios.delete(`http://localhost:8000/advogados/${id}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAdvogados((prev) => prev.filter((adv) => adv.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar advogado:", error);
+    }
   };
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    const nomeSalvo = localStorage.getItem("nome");
-
-    if (nomeSalvo) setNomeUsuario(nomeSalvo);
 
     axios
-        .get("http://localhost:8000/escritorio/me/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        })
-        .then((response) => {
-        if (response.data && response.data.nome) {
-            setNomeUsuario(response.data.nome);
+      .get("http://localhost:8000/escritorio/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const { nome } = response.data;
+        setNomeUsuario(nome);
+        buscarAdvogados();
+      })
+      .catch((error) => {
+        if (error.response?.status === 401) {
+          localStorage.clear();
+          window.location.href = "/login";
         }
-        })
-        .catch((error) => {
-            if (error.response && error.response.status === 401) {
-                // token expirado ou inválido
-                localStorage.clear();
-                window.location.href = "/login";
-            } else {
-                console.log("Erro ao buscar escritório:", error);
-            }
-            });
-
-    }, []);
-
+      });
+  }, []);
 
   return (
     <Container>
@@ -131,28 +174,44 @@ export default function Advogados() {
 
       <WrapperCentralizado>
         <TituloComAcoes>
-            <Subtitulo>Gestão de Advogados</Subtitulo>
-            <CreateButton onClick={() => setModalOpen(true)}>Adicionar Advogado</CreateButton>
+          <Subtitulo>Gestão de Advogados</Subtitulo>
+          <CreateButton onClick={() => setModalOpen(true)}>
+            Adicionar Advogado
+          </CreateButton>
         </TituloComAcoes>
       </WrapperCentralizado>
 
-    <WrapperCentralizado>
+      <WrapperCentralizado>
         <Tabela>
           <TabelaHeader>
             <tr>
               <th>Usuário</th>
               <th>Email</th>
               <th>OAB</th>
+              <th>Ações</th>
             </tr>
           </TabelaHeader>
           <tbody>
             {advogados.map((adv) => (
               <TabelaRow key={adv.id}>
-                <TabelaCelula>
-                  <strong>{adv.nome}</strong>
-                </TabelaCelula>
+                <TabelaCelula><strong>{adv.nome}</strong></TabelaCelula>
                 <TabelaCelula>{adv.email}</TabelaCelula>
                 <TabelaCelula>{adv.oab}</TabelaCelula>
+                <TabelaCelula>
+                  <button
+                    onClick={() => deletarAdvogado(adv.id)}
+                    title="Excluir advogado"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#b00",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    <FaTrash />
+                  </button>
+                </TabelaCelula>
               </TabelaRow>
             ))}
           </tbody>
@@ -162,28 +221,15 @@ export default function Advogados() {
       {modalOpen && (
         <ModalBackdrop>
           <ModalContent>
-            <button
-              onClick={() => setModalOpen(false)}
-              style={{
-                position: "absolute",
-                top: "1rem",
-                right: "1rem",
-                fontSize: "1.5rem",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              &times;
-            </button>
-            <h2 style={{ marginBottom: "1.5rem" }}>
-              Cadastrar Novo Advogado
-            </h2>
+            <CloseButton onClick={() => setModalOpen(false)}>&times;</CloseButton>
+            <ModalHeading>Cadastrar Novo Advogado</ModalHeading>
+
             <FormGroup>
               <Label>Nome</Label>
               <Input
                 value={novoNome}
                 onChange={(e) => setNovoNome(e.target.value)}
+                placeholder="Digite o nome"
               />
             </FormGroup>
             <FormGroup>
@@ -191,6 +237,7 @@ export default function Advogados() {
               <Input
                 value={novoEmail}
                 onChange={(e) => setNovoEmail(e.target.value)}
+                placeholder="exemplo@email.com"
               />
             </FormGroup>
             <FormGroup>
@@ -198,6 +245,7 @@ export default function Advogados() {
               <Input
                 value={novaOAB}
                 onChange={(e) => setNovaOAB(e.target.value)}
+                placeholder="12345/SP"
               />
             </FormGroup>
             <SubmitButton onClick={adicionarAdvogado}>Cadastrar</SubmitButton>

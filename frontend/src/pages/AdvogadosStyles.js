@@ -286,4 +286,19 @@ export const TituloComAcoes = styled.div`
   width: 100%;
 `;
 
+export const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+`;
+
+export const ModalHeading = styled.h2`
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+`;
 

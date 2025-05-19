@@ -4,12 +4,14 @@ from .views import AdvogadoViewSet, EscritorioMeView, EscritorioViewSet, CausaVi
 from . import views
 
 router = DefaultRouter()
-router.register(r'advogados', AdvogadoViewSet)
+router.register(r'advogados', AdvogadoViewSet, basename='advogado')
 router.register(r'escritorios', EscritorioViewSet)
 router.register(r'causas', CausaViewSet)
 
+
 urlpatterns = [
     path('', views.home, name='home'),  # Página inicial
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
     path('escritorio/me/', EscritorioMeView.as_view(), name='escritorio-me'),
+    
 ]
