@@ -8,6 +8,7 @@ class DocumentoSerializer(serializers.ModelSerializer):
 
 class CausaSerializer(serializers.ModelSerializer):
     documentos = DocumentoSerializer(many=True, read_only=True)
+    arquivo_peticao_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Causa
@@ -19,5 +20,12 @@ class CausaSerializer(serializers.ModelSerializer):
             'advogados',
             'dados_extraidos',
             'arquivo_peticao',
+            'arquivo_peticao_url',  # novo campo com URL completa
             'documentos'
         ]
+
+    def get_arquivo_peticao_url(self, obj):
+        request = self.context.get('request')
+        if obj.arquivo_peticao and hasattr(obj.arquivo_peticao, 'url'):
+            return request.build_absolute_uri(obj.arquivo_peticao.url)
+        return None

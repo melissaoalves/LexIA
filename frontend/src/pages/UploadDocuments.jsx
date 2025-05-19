@@ -2,91 +2,27 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   Container,
-  Header,
-  Title,
-  CreateButton,
-  PeticoesContainer,
-  PeticaoCard,
-  PeticaoInfo,
-  DownloadButton,
+  WrapperLeft,
+  Subtitulo,
+  WrapperCentralizado,
   ModalBackdrop,
   ModalContent,
-  DragDropArea,
-  HiddenFileInput,
-  SubmitButton,
-  FileList,
-  FileListItem,
-  FileInfo,
-  FileThumbnail,
-  FileDetailsWrapper,
-  FileName,
-  FileDetails,
-  RemoveButton,
-  SearchInput,
-  SearchWrapper,
-  SearchIcon,
-  ClienteNome,
-  ClienteDetalhes,
-  StatusText,
-  WrapperCentralizado,
-  SearchInputWrapper,
+  Header,
   HeaderContentWrapper,
-  AvatarCirculo,
-  NomeUsuario,
+  Title,
   UsuarioWrapper,
   AvatarMenuWrapper,
+  AvatarCirculo,
+  NomeUsuario,
   DropdownMenu,
-  Subtitulo,
-  WrapperLeft,
 } from "./PeticoesStyles";
-import { FaTrash, FaDownload } from "react-icons/fa";
 import OfficeDataModal from "../components/OfficeDataModal";
-
-const LoadingBar = () => (
-  <div
-    style={{
-      marginTop: "1rem",
-      height: "10px",
-      width: "100%",
-      backgroundColor: "#eee",
-      borderRadius: "8px",
-      overflow: "hidden",
-      position: "relative",
-    }}
-  >
-    <div
-      style={{
-        position: "absolute",
-        height: "100%",
-        width: "30%",
-        backgroundColor: "#2d2d2d",
-        animation: "loadingAnim 1.2s infinite",
-      }}
-    />
-    <style>{`
-      @keyframes loadingAnim {
-        0% { left: -30%; }
-        50% { left: 100%; }
-        100% { left: 100%; }
-      }
-    `}</style>
-  </div>
-);
-
-function formatFileSize(bytes) {
-  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-}
-
-function getFileThumbnail(file) {
-  const ext = file.name.split(".").pop().toLowerCase();
-  if (ext === "pdf")
-    return "https://cdn-icons-png.flaticon.com/512/337/337946.png";
-  if (ext === "doc" || ext === "docx")
-    return "https://cdn-icons-png.flaticon.com/512/337/337932.png";
-  if (ext === "png" || ext === "jpg" || ext === "jpeg")
-    return URL.createObjectURL(file);
-  return "https://cdn-icons-png.flaticon.com/512/565/565547.png";
-}
+import SearchBar from "../components/SearchBar";
+import DocumentDropZone from "../components/DocumentDropZone";
+import LoadingStatus from "../components/LoadingStatus";
+import ReviewExtractedFields from "../components/ReviewExtractedFields";
+import SuccessMessage from "../components/SuccessMessage";
+import PeticoesList from "../components/PeticoesList";
 
 export default function Peticoes() {
   const [loadingEscritorio, setLoadingEscritorio] = useState(true);
@@ -99,169 +35,136 @@ export default function Peticoes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
-
   const [modalStep, setModalStep] = useState("upload");
-  const [extractedText, setExtractedText] = useState("");
-  const [selectedAdvogados, setSelectedAdvogados] = useState([]);
+  const [statusMensagem, setStatusMensagem] = useState("");
+  const [dadosExtraidos, setDadosExtraidos] = useState({});
   const [showOfficeModal, setShowOfficeModal] = useState(true);
 
-  const advogadosDisponiveis = [
-    { id: 1, nome: "Dr. Ana Paula" },
-    { id: 2, nome: "Dr. Carlos Souza" },
-    { id: 3, nome: "Dr. Letícia Almeida" },
-  ];
-
-  const simularExtracaoTexto = () => {
-    setModalStep("loading");
-    setTimeout(() => {
-      setExtractedText("Exemplo de texto extraído do documento para edição...");
-      setModalStep("edit");
-    }, 2000);
-  };
-
-  const toggleAdvogado = (id) => {
-    setSelectedAdvogados((prev) =>
-      prev.includes(id) ? prev.filter((aid) => aid !== id) : [...prev, id]
-    );
+  const atualizarPeticoes = async () => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      const res = await axios.get("http://localhost:8000/api/peticoes/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPeticoes(res.data);
+      setFilteredPeticoes(res.data);
+    } catch (err) {
+      console.error("Erro ao buscar petições:", err);
+    }
   };
 
   useEffect(() => {
-    const fetchedPeticoes = [
-      {
-        id: 1,
-        nomeCliente: "João Silva",
-        status: "Concluído",
-        dataCriacao: "2025-05-10",
-        arquivo_peticao_url: "/files/peticao_1.docx",
-      },
-      {
-        id: 2,
-        nomeCliente: "Maria Santos",
-        status: "Em andamento",
-        dataCriacao: "2025-05-12",
-        arquivo_peticao_url: "/files/peticao_2.docx",
-      },
-    ];
-    setPeticoes(fetchedPeticoes);
-    setFilteredPeticoes(fetchedPeticoes);
+    const nomeSalvo = localStorage.getItem("nome");
+    if (nomeSalvo) setNomeUsuario(nomeSalvo);
+
+    const token = localStorage.getItem("accessToken");
+    axios
+      .get("http://localhost:8000/escritorio/me/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data?.nome) setShowOfficeModal(false);
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+        setShowOfficeModal(true);
+      })
+      .finally(() => setLoadingEscritorio(false));
   }, []);
 
   useEffect(() => {
-    const filtered = peticoes.filter((peticao) =>
-      peticao.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase())
+    atualizarPeticoes();
+  }, []);
+
+  useEffect(() => {
+    const filtro = peticoes.filter((p) =>
+      p.nome_cliente?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredPeticoes(filtered);
+    setFilteredPeticoes(filtro);
   }, [searchTerm, peticoes]);
 
   const handleFilesChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-    setSelectedFiles((prev) => [...prev, ...newFiles]);
+    const novosArquivos = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...novosArquivos]);
     e.target.value = null;
-  };
-
-  const removerArquivo = (index) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onDragOver = (e) => {
     e.preventDefault();
     setDragOver(true);
   };
-
   const onDragLeave = (e) => {
     e.preventDefault();
     setDragOver(false);
   };
-
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFiles = Array.from(e.dataTransfer.files);
-      setSelectedFiles((prev) => [...prev, ...droppedFiles]);
+    if (e.dataTransfer.files.length > 0) {
+      const dropped = Array.from(e.dataTransfer.files);
+      setSelectedFiles((prev) => [...prev, ...dropped]);
       e.dataTransfer.clearData();
     }
   };
 
-  const handleSubmit = () => {
-    if (selectedFiles.length === 0) return;
-    simularExtracaoTexto();
-  };
-
-  const handleOfficeSubmit = async (formData) => {
+  const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
+    const formData = new FormData();
+    selectedFiles.forEach((file) => formData.append("documentos", file));
 
-    console.log("Token JWT recuperado:", token);
-
-    if (!token) {
-      alert("Usuário não autenticado. Faça login novamente.");
-      return;
-    }
+    setModalStep("processing");
+    setStatusMensagem("Extraindo textos dos documentos...");
 
     try {
-      // Confirma os dados que estão sendo enviados
-      console.log("Payload enviado:", formData);
-
-      const response = await axios.patch(
-        "http://localhost:8000/escritorio/me/",
+      const res = await axios.post(
+        "http://localhost:8000/api/upload/",
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      // DEBUG: Verifica a resposta da API
-      console.log("Resposta da API:", response.data);
+      setStatusMensagem("Estruturando dados com IA...");
 
-      setShowOfficeModal(false);
+      setTimeout(async () => {
+        await atualizarPeticoes();
+        const novaPeticao = res.data.peticao;
+        setDadosExtraidos(typeof novaPeticao.dados_extraidos === "string"
+        ? JSON.parse(novaPeticao.dados_extraidos)
+        : novaPeticao.dados_extraidos);
+        setModalStep("review");
+      }, 2000);
     } catch (error) {
-      // DEBUG: Detalha erro de autenticação ou outro
-      if (error.response) {
-        console.error("Erro ao salvar dados do escritório:", {
-          status: error.response.status,
-          data: error.response.data,
-        });
-
-        if (error.response.status === 401) {
-          alert("Sessão expirada. Faça login novamente.");
-        } else {
-          alert("Erro ao salvar dados. Verifique os campos e tente novamente.");
-        }
-      } else {
-        console.error("Erro na requisição:", error.message);
-        alert("Erro de conexão com o servidor.");
-      }
+      alert("Erro ao enviar documentos");
+      console.error(error);
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const nomeSalvo = localStorage.getItem("nome");
-    if (nomeSalvo) setNomeUsuario(nomeSalvo);
+  const handleReviewConfirm = () => {
+    setModalStep("done");
+  };
 
-    axios
-      .get("http://localhost:8000/escritorio/me/", {
+  const handleOfficeSubmit = async (formData) => {
+    const token = localStorage.getItem("accessToken");
+    try {
+      await axios.patch("http://localhost:8000/escritorio/me/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      })
-      .then((response) => {
-        if (response.data && response.data.nome) {
-          setShowOfficeModal(false); // escritório já está cadastrado
-        }
-      })
-      .catch((error) => {
-        console.log("Erro ao buscar escritório:", error);
-        setShowOfficeModal(true); // escritório não existe ou erro
-      })
-      .finally(() => {
-        setLoadingEscritorio(false); // finaliza o carregamento
       });
-  }, []);
-
+      setShowOfficeModal(false);
+    } catch (error) {
+      console.error("Erro ao salvar escritório", error);
+      alert("Erro ao salvar dados do escritório.");
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -279,7 +182,6 @@ export default function Peticoes() {
           <Title>LexIA</Title>
           <UsuarioWrapper>
             <NomeUsuario>{nomeUsuario}</NomeUsuario>
-
             <AvatarMenuWrapper onClick={() => setMenuAberto(!menuAberto)}>
               <AvatarCirculo>
                 {nomeUsuario ? nomeUsuario.charAt(0).toUpperCase() : "?"}
@@ -300,50 +202,19 @@ export default function Peticoes() {
       </WrapperLeft>
 
       <WrapperCentralizado>
-        <SearchWrapper>
-          <SearchInputWrapper>
-            <SearchIcon />
-            <SearchInput
-              type="text"
-              placeholder="Buscar petições..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </SearchInputWrapper>
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onCreateClick={() => {
+            setModalOpen(true);
+            setModalStep("upload");
+            setSelectedFiles([]);
+            setDadosExtraidos({});
+            setStatusMensagem("");
+          }}
+        />
 
-          <CreateButton
-            onClick={() => {
-              setModalOpen(true);
-              setModalStep("upload");
-              setSelectedFiles([]);
-              setExtractedText("");
-              setSelectedAdvogados([]);
-            }}
-          >
-            Gerar / Criar Petição
-          </CreateButton>
-        </SearchWrapper>
-
-        <PeticoesContainer>
-          {filteredPeticoes.map((peticao) => (
-            <PeticaoCard key={peticao.id}>
-              <PeticaoInfo>
-                <ClienteNome>{peticao.nomeCliente}</ClienteNome>
-                <ClienteDetalhes>
-                  Status:{" "}
-                  <StatusText concluido={peticao.status === "Concluído"}>
-                    {peticao.status}
-                  </StatusText>
-                  <br />
-                  Data de criação: {peticao.dataCriacao}
-                </ClienteDetalhes>
-              </PeticaoInfo>
-              <DownloadButton href={peticao.arquivo_peticao_url} download>
-                <FaDownload />
-              </DownloadButton>
-            </PeticaoCard>
-          ))}
-        </PeticoesContainer>
+        <PeticoesList peticoes={filteredPeticoes} />
       </WrapperCentralizado>
 
       {modalOpen && (
@@ -368,111 +239,32 @@ export default function Peticoes() {
             <h2>Enviar documentos</h2>
 
             {modalStep === "upload" && (
-              <>
-                <DragDropArea
-                  className={dragOver ? "drag-over" : ""}
-                  onClick={() => fileInputRef.current.click()}
-                  onDragOver={onDragOver}
-                  onDragLeave={onDragLeave}
-                  onDrop={onDrop}
-                >
-                  Clique ou arraste os arquivos aqui para enviar
-                </DragDropArea>
-
-                <HiddenFileInput
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.docx,.png,.jpg,.jpeg"
-                  onChange={handleFilesChange}
-                />
-
-                <FileList>
-                  {selectedFiles.map((file, index) => (
-                    <FileListItem key={index}>
-                      <FileInfo>
-                        <FileThumbnail
-                          src={getFileThumbnail(file)}
-                          alt={file.name}
-                        />
-                        <FileDetailsWrapper>
-                          <FileName>{file.name}</FileName>
-                          <FileDetails>
-                            {file.name.split(".").pop().toUpperCase()} •{" "}
-                            {formatFileSize(file.size)}
-                          </FileDetails>
-                        </FileDetailsWrapper>
-                      </FileInfo>
-                      <RemoveButton
-                        onClick={() => removerArquivo(index)}
-                        title="Remover arquivo"
-                      >
-                        <FaTrash size={18} />
-                      </RemoveButton>
-                    </FileListItem>
-                  ))}
-                </FileList>
-
-                <SubmitButton
-                  disabled={selectedFiles.length === 0}
-                  onClick={handleSubmit}
-                >
-                  Enviar Documentos
-                </SubmitButton>
-              </>
+              <DocumentDropZone
+                dragOver={dragOver}
+                fileInputRef={fileInputRef}
+                selectedFiles={selectedFiles}
+                setSelectedFiles={setSelectedFiles}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                handleFilesChange={handleFilesChange}
+                handleSubmit={handleSubmit}
+              />
             )}
 
-            {modalStep === "loading" && (
-              <div>
-                <p>Lendo documento...</p>
-                <LoadingBar />
-              </div>
+            {modalStep === "processing" && (
+              <LoadingStatus status={statusMensagem} />
             )}
 
-            {modalStep === "edit" && (
-              <div>
-                <label>Texto extraído (editável):</label>
-                <textarea
-                  rows={8}
-                  style={{
-                    width: "100%",
-                    padding: "1rem",
-                    borderRadius: "8px",
-                    marginTop: "0.5rem",
-                  }}
-                  value={extractedText}
-                  onChange={(e) => setExtractedText(e.target.value)}
-                />
-                <SubmitButton onClick={() => setModalStep("select")}>
-                  Confirmar texto
-                </SubmitButton>
-              </div>
+            {modalStep === "review" && (
+              <ReviewExtractedFields
+                fields={dadosExtraidos}
+                setFields={setDadosExtraidos}
+                onConfirm={handleReviewConfirm}
+              />
             )}
 
-            {modalStep === "select" && (
-              <div>
-                <h3>Selecionar advogados</h3>
-                {advogadosDisponiveis.map((adv) => (
-                  <label
-                    key={adv.id}
-                    style={{ display: "block", marginBottom: "0.5rem" }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedAdvogados.includes(adv.id)}
-                      onChange={() => toggleAdvogado(adv.id)}
-                    />{" "}
-                    {adv.nome}
-                  </label>
-                ))}
-
-                {selectedAdvogados.length > 0 && (
-                  <SubmitButton onClick={() => alert("Petição gerada!")}>
-                    Gerar Petição
-                  </SubmitButton>
-                )}
-              </div>
-            )}
+            {modalStep === "done" && <SuccessMessage />}
           </ModalContent>
         </ModalBackdrop>
       )}
