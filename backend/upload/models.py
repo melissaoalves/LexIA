@@ -46,6 +46,8 @@ class Causa(models.Model):
     # Armazena o arquivo .docx gerado da petição
     arquivo_peticao = models.FileField(upload_to='peticoes/', null=True, blank=True)
 
+    escritorio = models.ForeignKey(Escritorio, on_delete=models.CASCADE, related_name='peticoes')
+
     def __str__(self):
         return f"Causa de {self.nome_cliente}"
 

@@ -29,6 +29,10 @@ class DocumentoUploadView(APIView):
     parser_classes = (MultiPartParser,)
 
     def post(self, request, *args, **kwargs):
+        escritorio = request.user.escritorio
+        if not escritorio:
+            return Response({"detail": "Usuário não possui escritório vinculado."}, status=400)
+
         arquivos = request.FILES.getlist('documentos')
         documentos_processados = []
         full_text_total = ""
@@ -97,19 +101,19 @@ class DocumentoUploadView(APIView):
         peticao = Causa.objects.create(
             nome_cliente=nome_cliente,
             status="Em andamento",
-            dados_extraidos=json.dumps(dados_estruturados, ensure_ascii=False)
+            dados_extraidos=json.dumps(dados_estruturados, ensure_ascii=False),
+            escritorio=escritorio
         )
-
+        
         # Associa os documentos à petição
         for doc in Documento.objects.filter(id__in=[d['id'] for d in documentos_processados]):
             doc.causa = peticao
             doc.save()
 
-        # 🔧 Geração da petição
+        # Geração da petição
         caminho_template = os.path.join('templates', 'peticao_bpc_loas.docx')
         caminho_saida = os.path.join(TEMP_DIR, f'peticao_{peticao.id}.docx')
         gerar_peticao(json.dumps(dados_estruturados, ensure_ascii=False), caminho_template, caminho_saida)
-
 
         with open(caminho_saida, 'rb') as f:
             peticao.arquivo_peticao.save(f'peticao_{peticao.id}.docx', f)
@@ -129,6 +133,14 @@ class ListaPeticoesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        causas = Causa.objects.filter(arquivo_peticao__isnull=False).order_by('-data_criacao')
+        escritorio = request.user.escritorio
+        if not escritorio:
+            return Response([], status=200)
+
+        causas = Causa.objects.filter(
+            arquivo_peticao__isnull=False,
+            escritorio=escritorio
+        ).order_by('-data_criacao')
+        
         data = CausaSerializer(causas, many=True, context={"request": request}).data
         return Response(data)
