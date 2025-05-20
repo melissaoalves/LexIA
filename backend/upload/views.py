@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pdf2image import convert_from_path
 from PIL import Image
+from docxtpl import DocxTemplate, InlineImage
 
 from django.conf import settings
 from rest_framework.views import APIView
@@ -16,9 +17,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Documento, Causa
 from upload.models import Advogado
 from .serializers import DocumentoSerializer, CausaSerializer
-
 from ocr.services import extrair_dados_peticao
-from pdf_extraction.services import gerar_peticao
 
 import google.generativeai as genai
 
@@ -64,16 +63,12 @@ class DocumentoUploadView(APIView):
                     for img in images:
                         img_byte_arr = io.BytesIO()
                         img.save(img_byte_arr, format='PNG')
-                        image_part = {
-                            "mime_type": "image/png",
-                            "data": img_byte_arr.getvalue()
-                        }
-                        response = model.generate_content(
-                            ["Leia o texto desta imagem.", image_part]
-                        )
+                        image_part = {"mime_type": "image/png", "data": img_byte_arr.getvalue()}
+                        response = model.generate_content([
+                            "Leia o texto desta imagem.", image_part
+                        ])
                         response.resolve()
                         texto_extraido += response.text + "\n\n"
-
                     os.remove(temp_pdf_path)
 
                 elif arquivo.name.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -83,21 +78,19 @@ class DocumentoUploadView(APIView):
                             temp_file.write(chunk)
 
                     img = Image.open(temp_image_path)
-                    response = model.generate_content(
-                        ["Leia o texto desta imagem.", img]
-                    )
+                    response = model.generate_content([
+                        "Leia o texto desta imagem.", img
+                    ])
                     response.resolve()
                     texto_extraido = response.text
                     img.close()
                     os.remove(temp_image_path)
-
                 else:
                     texto_extraido = "Formato de arquivo não suportado."
 
                 full_text_total += texto_extraido + "\n"
-
             except Exception as e:
-                texto_extraido = f"Erro ao processar arquivo: {str(e)}"
+                texto_extraido = f"Erro ao processar arquivo: {e}"
 
             documento_obj = Documento.objects.create(
                 nome=arquivo.name,
@@ -112,33 +105,37 @@ class DocumentoUploadView(APIView):
         # Extrai dados principais via IA
         raw_dados = extrair_dados_peticao(full_text_total)
         try:
-            dados_estruturados = (
-                json.loads(raw_dados)
-                if isinstance(raw_dados, str) else raw_dados
-            )
-        except Exception as e:
-            print("Erro ao interpretar JSON:", e)
+            dados_estruturados = json.loads(raw_dados)
+        except Exception:
             dados_estruturados = {}
 
-        # Monta contexto de advogados selecionados
+        # Contexto de advogados
         adv_objs = Advogado.objects.filter(
             id__in=selected_adv_ids,
             escritorio=escritorio
         )
         adv_context = [
-            {
-                'nome': adv.nome,
-                'uf': adv.escritorio.estado or '',
-                'oab': adv.oab
-            }
+            {'nome': adv.nome, 'uf': adv.escritorio.estado or '', 'oab': adv.oab}
             for adv in adv_objs
         ]
         dados_estruturados['advogados'] = adv_context
 
-        # Cria a Causa e associa os documentos
-        nome_cliente = dados_estruturados.get(
-            "nome_autor", "Cliente Desconhecido"
+        # Contexto do escritório (sem InlineImage)
+        endereco_formatado = (
+            f"{escritorio.logradouro}, nº {escritorio.numero}, {escritorio.bairro}, "
+            f"{escritorio.cidade}/{escritorio.estado}, CEP {escritorio.cep}"
         )
+        dados_estruturados.update({
+            'nome_escritorio': escritorio.nome,
+            'endereco_escritorio': endereco_formatado,
+            'email_escritorio': escritorio.email,
+            'telefone_escritorio': escritorio.telefone,
+            'cidade_escritorio': escritorio.cidade,
+            'estado_escritorio': escritorio.estado,
+        })
+
+        # Cria a Causa e associa os documentos
+        nome_cliente = dados_estruturados.get('nome_autor', 'Cliente Desconhecido')
         peticao = Causa.objects.create(
             nome_cliente=nome_cliente,
             status="Em andamento",
@@ -149,26 +146,27 @@ class DocumentoUploadView(APIView):
             id__in=[d['id'] for d in documentos_processados]
         ).update(causa=peticao)
 
-        # Gera o arquivo .docx usando o dict diretamente
+        # Geração do DOCX com logo inline
         caminho_template = BASE_DIR / 'templates' / 'peticao_bpc_loas.docx'
-        caminho_saida   = TEMP_DIR / f'peticao_{peticao.id}.docx'
-        gerar_peticao(
-            dados_estruturados,
-            str(caminho_template),
-            str(caminho_saida)
-        )
+        caminho_saida = TEMP_DIR / f'peticao_{peticao.id}.docx'
+
+        doc = DocxTemplate(str(caminho_template))
+        render_ctx = dados_estruturados.copy()
+        if escritorio.logo and os.path.isfile(escritorio.logo.path):
+            render_ctx['logo_escritorio'] = InlineImage(
+            doc, escritorio.logo.path
+            )
+
+        doc.render(render_ctx)
+        doc.save(str(caminho_saida))
 
         with open(caminho_saida, 'rb') as f:
-            peticao.arquivo_peticao.save(
-                f'peticao_{peticao.id}.docx', f
-            )
+            peticao.arquivo_peticao.save(f'peticao_{peticao.id}.docx', f)
             peticao.save()
 
         return Response({
             'peticao': {
-                **CausaSerializer(
-                    peticao, context={"request": request}
-                ).data,
+                **CausaSerializer(peticao, context={'request': request}).data,
                 'dados_extraidos': dados_estruturados
             },
             'documentos': documentos_processados
@@ -190,6 +188,6 @@ class ListaPeticoesView(APIView):
         ).order_by('-data_criacao')
 
         data = CausaSerializer(
-            causas, many=True, context={"request": request}
+            causas, many=True, context={'request': request}
         ).data
         return Response(data)

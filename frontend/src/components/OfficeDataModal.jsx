@@ -110,6 +110,7 @@ export default function OfficeDataModal({ show, onSubmit }) {
           },
         })
         .then((res) => {
+          console.log("[OfficeDataModal] GET /auth/me/ →", res.data);
           setUserData(res.data);
           setFormData((prev) => ({
             ...prev,
@@ -118,16 +119,19 @@ export default function OfficeDataModal({ show, onSubmit }) {
           }));
         })
         .catch((err) => {
-          console.error("Erro ao buscar dados do usuário:", err);
+          console.error("[OfficeDataModal] Erro ao buscar dados do usuário:", err);
         });
     }
   }, [show]);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleFileChange = (e) => {
-    setLogo(e.target.files[0]);
+    const file = e.target.files[0];
+    setLogo(file);
+    console.log("[OfficeDataModal] Logo selecionada:", file);
   };
 
   const isFormValid = Object.entries(formData).every(
@@ -136,15 +140,14 @@ export default function OfficeDataModal({ show, onSubmit }) {
 
   const handleSubmit = () => {
     const token = localStorage.getItem("accessToken");
-
     const data = new FormData();
+
     Object.entries(formData).forEach(([key, value]) => {
       data.append(key, value);
     });
+    if (logo) data.append("logo", logo);
 
-    if (logo) {
-      data.append("logo", logo);
-    }
+    console.log("[OfficeDataModal] PATCH /escritorio/me/ envio: fields=", formData, "logo=", logo);
 
     axios
       .patch("http://localhost:8000/escritorio/me/", data, {
@@ -153,12 +156,19 @@ export default function OfficeDataModal({ show, onSubmit }) {
           "Content-Type": "multipart/form-data",
         },
       })
-      .then(() => {
-        onSubmit(); // fecha o modal no componente pai
+      .then((res) => {
+        console.log("[OfficeDataModal] PATCH /escritorio/me/ resposta:", res.data);
+        onSubmit();
       })
       .catch((err) => {
-        console.error("Erro ao enviar os dados:", err);
-        alert("Erro ao enviar dados. Verifique os campos.");
+        console.error("[OfficeDataModal] Erro ao enviar os dados:", err);
+        if (err.response) {
+          console.error("[OfficeDataModal] Status:", err.response.status);
+          console.error("[OfficeDataModal] Response data:", err.response.data);
+        } else {
+          console.error("[OfficeDataModal] Sem resposta do servidor.");
+        }
+        alert("Erro ao enviar dados. Verifique os logs no console.");
       });
   };
 

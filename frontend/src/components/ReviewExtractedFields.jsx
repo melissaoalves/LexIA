@@ -55,7 +55,7 @@ export default function ReviewExtractedFields({ fields, setFields, onConfirm }) 
 
   const entriesParaExibir = Object
     .entries(fields)
-    .filter(([key]) => key !== "advogados");
+    .filter(([key]) => key !== "advogados" && !key.endsWith("_escritorio"));
 
   return (
     <Container>
@@ -69,3 +69,4 @@ export default function ReviewExtractedFields({ fields, setFields, onConfirm }) 
     </Container>
   );
 }
+

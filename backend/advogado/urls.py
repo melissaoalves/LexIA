@@ -10,8 +10,8 @@ router.register(r'causas', CausaViewSet)
 
 
 urlpatterns = [
-    path('', views.home, name='home'),  # Página inicial
-    path('', include(router.urls)),
+    path('', views.home, name='home'),  
     path('escritorio/me/', EscritorioMeView.as_view(), name='escritorio-me'),
-    
+    path('', include(router.urls)),
+
 ]

@@ -9,6 +9,7 @@ from django.http import Http404, HttpResponse
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework import serializers
+from rest_framework.parsers import FormParser, MultiPartParser
 
 
 def home(request):
@@ -56,8 +57,13 @@ class EscritorioUpdateView(generics.UpdateAPIView):
             user.save()
     
 class EscritorioMeView(RetrieveUpdateAPIView):
+    """
+    GET: retorna os dados do escritório vinculado ao usuário.
+    PATCH: atualiza campos do escritório e permite upload de logo.
+    """
     serializer_class = EscritorioSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [FormParser, MultiPartParser]
 
     def get_object(self):
         user = self.request.user
@@ -65,22 +71,12 @@ class EscritorioMeView(RetrieveUpdateAPIView):
             return user.escritorio
         raise NotFound("Usuário ainda não tem escritório vinculado.")
 
-    def patch(self, request, *args, **kwargs):
-        user = request.user
-        data = request.data.copy()
+    # removido o método patch personalizado para usar o comportamento padrão de update
+    # que já lida com request.data (incluindo arquivos) via DRF
 
-        if user.escritorio:
-            # Atualiza escritório existente
-            serializer = self.get_serializer(user.escritorio, data=data, partial=True)
-        else:
-            # Cria novo escritório e vincula ao usuário
-            serializer = self.get_serializer(data=data)
-        
-        serializer.is_valid(raise_exception=True)
+    def perform_update(self, serializer):
         escritorio = serializer.save()
-
+        user = self.request.user
         if not user.escritorio:
             user.escritorio = escritorio
             user.save()
-
-        return Response(self.get_serializer(user.escritorio).data)
