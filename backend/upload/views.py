@@ -18,6 +18,7 @@ from .models import Documento, Causa
 from upload.models import Advogado
 from .serializers import DocumentoSerializer, CausaSerializer
 from ocr.services import extrair_dados_peticao
+from docx.shared import Cm
 
 import google.generativeai as genai
 
@@ -42,14 +43,11 @@ class DocumentoUploadView(APIView):
                 status=400
             )
 
-        # IDs dos advogados selecionados (campo form-data "advogados")
         selected_adv_ids = request.data.getlist('advogados')
-
         arquivos = request.FILES.getlist('documentos')
         documentos_processados = []
         full_text_total = ""
 
-        # Extrai texto de cada arquivo (PDF/Imagem)
         for arquivo in arquivos:
             texto_extraido = ""
             try:
@@ -102,14 +100,12 @@ class DocumentoUploadView(APIView):
                 'texto_extraido': texto_extraido,
             })
 
-        # Extrai dados principais via IA
         raw_dados = extrair_dados_peticao(full_text_total)
         try:
             dados_estruturados = json.loads(raw_dados)
         except Exception:
             dados_estruturados = {}
 
-        # Contexto de advogados
         adv_objs = Advogado.objects.filter(
             id__in=selected_adv_ids,
             escritorio=escritorio
@@ -120,7 +116,6 @@ class DocumentoUploadView(APIView):
         ]
         dados_estruturados['advogados'] = adv_context
 
-        # Contexto do escritório (sem InlineImage)
         endereco_formatado = (
             f"{escritorio.logradouro}, nº {escritorio.numero}, {escritorio.bairro}, "
             f"{escritorio.cidade}/{escritorio.estado}, CEP {escritorio.cep}"
@@ -134,7 +129,6 @@ class DocumentoUploadView(APIView):
             'estado_escritorio': escritorio.estado,
         })
 
-        # Cria a Causa e associa os documentos
         nome_cliente = dados_estruturados.get('nome_autor', 'Cliente Desconhecido')
         peticao = Causa.objects.create(
             nome_cliente=nome_cliente,
@@ -146,15 +140,18 @@ class DocumentoUploadView(APIView):
             id__in=[d['id'] for d in documentos_processados]
         ).update(causa=peticao)
 
-        # Geração do DOCX com logo inline
         caminho_template = BASE_DIR / 'templates' / 'peticao_bpc_loas.docx'
         caminho_saida = TEMP_DIR / f'peticao_{peticao.id}.docx'
 
         doc = DocxTemplate(str(caminho_template))
         render_ctx = dados_estruturados.copy()
+
         if escritorio.logo and os.path.isfile(escritorio.logo.path):
             render_ctx['logo_escritorio'] = InlineImage(
-            doc, escritorio.logo.path
+                doc,
+                escritorio.logo.path,
+                width=Cm(4),
+                height=Cm(4)
             )
 
         doc.render(render_ctx)
