@@ -61,20 +61,3 @@ class EscritorioSerializer(serializers.ModelSerializer):
             user.escritorio = escritorio
             user.save()
         return escritorio
-
-class EscritorioMeView(RetrieveUpdateAPIView):
-    serializer_class = EscritorioSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user.escritorio
-
-    def perform_update(self, serializer):
-        # Atualiza ou cria o escritório
-        escritorio = serializer.save()
-
-        # Faz o vínculo com o usuário, se ainda não existir
-        user = self.request.user
-        if not user.escritorio:
-            user.escritorio = escritorio
-            user.save()

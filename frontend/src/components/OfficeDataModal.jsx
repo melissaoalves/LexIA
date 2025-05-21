@@ -158,7 +158,7 @@ export default function OfficeDataModal({ show, onSubmit }) {
       })
       .then((res) => {
         console.log("[OfficeDataModal] PATCH /escritorio/me/ resposta:", res.data);
-        onSubmit();
+        onSubmit(data);
       })
       .catch((err) => {
         console.error("[OfficeDataModal] Erro ao enviar os dados:", err);

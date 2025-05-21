@@ -57,10 +57,6 @@ class EscritorioUpdateView(generics.UpdateAPIView):
             user.save()
     
 class EscritorioMeView(RetrieveUpdateAPIView):
-    """
-    GET: retorna os dados do escritório vinculado ao usuário.
-    PATCH: atualiza campos do escritório e permite upload de logo.
-    """
     serializer_class = EscritorioSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [FormParser, MultiPartParser]
@@ -69,14 +65,26 @@ class EscritorioMeView(RetrieveUpdateAPIView):
         user = self.request.user
         if user.escritorio:
             return user.escritorio
-        raise NotFound("Usuário ainda não tem escritório vinculado.")
+        return None
 
-    # removido o método patch personalizado para usar o comportamento padrão de update
-    # que já lida com request.data (incluindo arquivos) via DRF
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        data = request.data.copy()
 
-    def perform_update(self, serializer):
+        if user.escritorio:
+            print("Atualizando escritório existente...")
+            instance = user.escritorio
+            serializer = self.get_serializer(instance, data=data, partial=True)
+        else:
+            print("Criando novo escritório...")
+            serializer = self.get_serializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
         escritorio = serializer.save()
-        user = self.request.user
+
         if not user.escritorio:
+            print(f"Associando escritório ID {escritorio.id} ao usuário {user.email}")
             user.escritorio = escritorio
             user.save()
+
+        return Response(self.get_serializer(user.escritorio).data)

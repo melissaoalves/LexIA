@@ -16,7 +16,7 @@ import {
   NomeUsuario,
   DropdownMenu,
   NavMenu,
-  HeaderLeftGroup
+  HeaderLeftGroup,
 } from "./PeticoesStyles";
 
 import OfficeDataModal from "../components/OfficeDataModal";
@@ -139,12 +139,16 @@ export default function Peticoes() {
     setStatusMensagem("Extraindo textos dos documentos...");
 
     try {
-      const res = await axios.post("http://localhost:8000/api/upload/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.post(
+        "http://localhost:8000/api/upload/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setStatusMensagem("Estruturando dados com IA...");
 
@@ -174,7 +178,6 @@ export default function Peticoes() {
       await axios.patch("http://localhost:8000/escritorio/me/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
       });
       setShowOfficeModal(false);
@@ -192,7 +195,12 @@ export default function Peticoes() {
   return (
     <Container>
       {!loadingEscritorio && showOfficeModal && (
-        <OfficeDataModal show={true} onSubmit={handleOfficeSubmit} />
+        <OfficeDataModal
+          show={true}
+          onSubmit={(formData) => {
+            handleOfficeSubmit(formData); // passa o FormData já montado corretamente
+          }}
+        />
       )}
 
       <Header>
